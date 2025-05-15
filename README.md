@@ -1,36 +1,161 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PulsePilot Frontend
+
+PulsePilot is a modern social media management platform focused on comment management, audience segmentation, and engagement analytics.
+
+## Tech Stack
+
+- **Framework**: Next.js 14+ (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS with ShadCN UI components
+- **State Management**: Zustand & TanStack Query
+- **Animation**: Framer Motion
+- **Form Handling**: React Hook Form
+- **Icons**: Lucide
+- **Testing**: Jest, React Testing Library, Playwright
+
+## Prerequisites
+
+- Node.js 20.x or later
+- npm 10.x or later
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+   ```bash
+   git clone https://github.com/your-org/pulsepilot-frontend.git
+   cd pulsepilot-frontend
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   Edit `.env.local` with your configuration values.
+
+4. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Development Guidelines
+
+### Project Structure
+
+This project follows atomic design principles (atoms, molecules, organisms, templates, pages) for component organization. See [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) for details on directory organization and coding standards.
+
+### Performance Guidelines
+
+- Use memoization (React.memo, useMemo, useCallback) to minimize re-renders
+- Implement code splitting with dynamic imports for routes and large components
+- Use Next.js Image component for all images to ensure proper optimization
+- Implement virtualization for long lists using react-virtualized
+- Use bundle analyzer to monitor bundle size: `npm run analyze`
+- Implement proper loading states and skeleton screens during data fetching
+
+### State Management
+
+- Keep state as close as possible to where it's used
+- Use React Context for global state that changes infrequently
+- Implement Zustand for more complex global state management
+- Use TanStack Query for server state management and API communication
+- Always maintain immutability when updating state
+
+### Accessibility (A11y)
+
+- Use semantic HTML elements
+- Include proper ARIA labels and roles where needed
+- Ensure keyboard navigation works throughout the application
+- Provide adequate color contrast (WCAG AA compliance)
+- Test with screen readers
+- Support focus management, especially for modals and dialogs
+
+### Type Safety
+
+- Use TypeScript strict mode throughout the codebase
+- Define explicit return types for all functions
+- Create comprehensive interfaces/types for all data structures
+- Avoid using 'any' type - use unknown if type is truly unknown
+
+### Code Quality
+
+- **Linting**: Run `npm run lint` to check for linting errors
+- **Type checking**: Run `npm run type-check` to check for TypeScript errors
+- **Formatting**: Run `npm run format` to format code with Prettier
+- **Testing**: Run `npm run test` to run unit and integration tests
+
+### Branch Strategy
+
+- `main`: Production-ready code
+- `develop`: Integration branch for features
+- `feature/*`: New features or enhancements
+- `bugfix/*`: Bug fixes
+- `hotfix/*`: Urgent production fixes
+
+### Commit Convention
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Example: `feat(auth): add social login functionality`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Pull Requests
 
-## Learn More
+- Create a pull request against the `develop` branch
+- Fill out the PR template
+- Ensure all checks pass
+- Request a review from appropriate reviewers
 
-To learn more about Next.js, take a look at the following resources:
+## Testing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Unit and integration tests**: `npm run test`
+- **End-to-end tests**: `npm run test:e2e`
+- **Test coverage**: `npm run test:coverage` (minimum 80% coverage required)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Production Build
 
-## Deploy on Vercel
+```bash
+npm run build
+npm run start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Documentation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Component and hooks documentation is available via Storybook: `npm run storybook`
+- API documentation is available in the codebase and through OpenAPI specs
+
+## Deployment
+
+CI/CD pipeline documentation is available in [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+## Performance Monitoring
+
+Performance monitoring dashboards and tools are available to team members. Contact the DevOps team for access.
+
+## Contributing
+
+Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is proprietary software owned by PulsePilot, Inc.
