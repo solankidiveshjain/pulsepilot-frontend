@@ -109,3 +109,30 @@ tmp/
 /analyze/
 bundle-stats.json
 stats.json
+
+# Tailwind CSS
+.tailwindcss-cache/
+.tailwindcss-debug.log
+
+# Build artifacts
+*.min.js
+*.min.css
+*.map
+
+# System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# IDE specific files
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

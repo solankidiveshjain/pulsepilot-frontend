@@ -4,9 +4,9 @@ PulsePilot is a modern social media management platform focused on comment manag
 
 ## Tech Stack
 
-- **Framework**: Next.js 14+ (App Router)
+- **Framework**: Next.js 15+ (App Router)
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS with ShadCN UI components
+- **Styling**: Tailwind CSS 4.x with ShadCN UI components
 - **State Management**: Zustand & TanStack Query
 - **Animation**: Framer Motion
 - **Form Handling**: React Hook Form
@@ -63,6 +63,15 @@ We maintain strict design and implementation guidelines to ensure consistency an
 - Comments interface specific guidelines: [docs/comments-interface-guidelines.md](./docs/comments-interface-guidelines.md)
 
 All pull requests must adhere to these guidelines or they will be rejected.
+
+### Styling Guidelines
+
+- Use Tailwind CSS for all styling
+- Follow the design token system consistently
+- Implement responsive designs with mobile-first approach
+- Maintain dark mode compatibility
+- Use CSS-in-JS or Tailwind for styling, avoiding global CSS
+- Follow spacing and sizing guidelines from the design system
 
 ### Performance Guidelines
 
