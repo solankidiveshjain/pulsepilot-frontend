@@ -1,0 +1,97 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "editor.rulers": [100],
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "css.validate": false,
+  "tailwindCSS.validate": true,
+  "tailwindCSS.emmetCompletions": true,
+  "cSpell.words": [
+    "clsx",
+    "lucide",
+    "pulsepilot",
+    "radix",
+    "shadcn",
+    "sonner",
+    "tailwindcss",
+    "tanstack",
+    "zustand"
+  ],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "search.exclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true
+  },
+  "editor.linkedEditing": true,
+  "editor.suggest.showStatusBar": true,
+  "editor.suggest.shareSuggestSelections": true,
+  "editor.snippetSuggestions": "top",
+  "jest.autoRun": "off",
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#1E1E1E",
+    "activityBar.foreground": "#E7E7E7",
+    "statusBar.background": "#1E1E1E",
+    "statusBar.foreground": "#E7E7E7",
+    "statusBar.debuggingBackground": "#2D2D2D"
+  },
+  "editor.guides.bracketPairs": true,
+  "editor.bracketPairColorization.enabled": true,
+  "workbench.editor.pinnedTabSizing": "compact",
+  "editor.stickyScroll.enabled": true,
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.tsx": "${capture}.test.tsx, ${capture}.stories.tsx",
+    "*.ts": "${capture}.test.ts, ${capture}.spec.ts",
+    "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, .npmrc, .yarnrc, .pnpmrc"
+  },
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "editor.accessibilitySupport": "on",
+  "eslint.rules.customizations": [
+    { "rule": "react-hooks/exhaustive-deps", "severity": "error" },
+    { "rule": "@typescript-eslint/no-explicit-any", "severity": "error" },
+    { "rule": "jsx-a11y/*", "severity": "error" }
+  ],
+  "typescript.preferences.quoteStyle": "double",
+  "javascript.preferences.quoteStyle": "double",
+  "files.eol": "\n",
+  "todo-tree.highlights.defaultHighlight": {
+    "foreground": "white",
+    "background": "#ffd700",
+    "type": "text-and-comment"
+  },
+  "todo-tree.general.tags": ["TODO", "FIXME", "BUG", "HACK", "REVIEW"],
+  "todo-tree.regex.regex": "(//|#|<!--|;|/\\*|^|^\\s*(-|\\d+.))\\s*($TAGS).*(\\n\\s*//\\s+.*)*",
+  "todohighlight.keywords": [
+    {
+      "text": "FIXME",
+      "color": "white",
+      "backgroundColor": "#ff6347"
+    },
+    {
+      "text": "HACK",
+      "color": "white",
+      "backgroundColor": "#ff69b4"
+    }
+  ]
+}

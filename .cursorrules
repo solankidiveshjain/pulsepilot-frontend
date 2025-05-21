@@ -1,0 +1,135 @@
+# PulsePilot Frontend Development Rules
+
+**These rules are mandatory and override any quick fix or workaround. All code reviews and future fixes must reference these rules and reject any deviation or workaround.**
+
+## Virtualization & React 19 Compatibility
+
+- Use `react-window` (not `react-virtualized`) for all list virtualization
+- Do not use `@ts-expect-error`, `any`, or legacy ref hacks for React 19 compatibility
+- Use dynamic measurement for virtualization if content height is not fixed (see react-window docs)
+- Test virtualization on both large datasets (1000+ items) and small datasets (10-20 items)
+- Always handle loading, error, and empty states appropriately
+
+## Layout, Spacing & Responsiveness
+
+- All spacing, padding, and layout must use Tailwind responsive classes and be handled inside components, not with outer margins or hotfixes
+- All new code must be responsive and tested at mobile and desktop breakpoints
+- Use a 12-column grid for desktop (`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-[80px]`), and stacked layout for mobile
+- All UI/UX fixes must follow atomic design, marker/Figma spacing, and accessibility standards
+- No hotfixes or dirty workarounds allowed; all changes must be robust, maintainable, and in line with the design system
+
+## Comments Interface Architecture
+
+- Maintain clean separation of concerns with a layered architecture:
+  - UI components (pure presentational components) in `src/components/comments/ui/`
+  - Container components (handling data flow and operations) in `src/components/comments/containers/`
+  - State management (Zustand store with selectors) in `src/components/comments/state/`
+  - Models (data transformation and business logic) in `src/components/comments/models/`
+- Always use ErrorBoundary components to prevent cascading failures
+- Implement strict typing with discriminated unions for complex state
+- Use React Query with optimistic updates for data fetching
+
+## Accessibility (A11y)
+
+- All interactive elements must be accessible (keyboard, aria, focus ring)
+- Use semantic HTML elements
+- Include proper ARIA labels and roles where needed
+- Ensure keyboard navigation works throughout the application
+- Provide adequate color contrast (WCAG AA compliance)
+- Test with screen readers
+- Support focus management, especially for modals and dialogs
+
+## Performance Guidelines
+
+- Minimize component re-renders by using memoization (React.memo, useMemo, useCallback)
+- Implement code splitting with dynamic imports for routes and large components
+- Use Next.js Image component for all images to ensure proper optimization
+- Optimize CSS with Tailwind's JIT mode and purge unused styles
+- Ensure bundle size is monitored using bundle analyzer during builds
+- Implement virtualization for long lists using react-window (not react-virtualized)
+- Avoid full page reloads when navigating between routes
+- Use proper loading states and skeleton screens during data fetching
+
+## Type Safety
+
+- Use TypeScript strict mode throughout the codebase
+- Define explicit return types for all functions
+- Create comprehensive interfaces/types for all data structures
+- Avoid using 'any' type - use unknown if type is truly unknown
+- Use discriminated unions for complex state management
+- Ensure proper null checking with optional chaining and nullish coalescing
+
+## Component Structure
+
+- Follow atomic design principles (atoms, molecules, organisms, templates, pages)
+- Limit component complexity - extract logic to custom hooks
+- Keep component files under 250 lines of code
+- Use proper prop validation with TypeScript
+- Implement error boundaries around key application sections
+- Use React Suspense for code-splitting and loading states
+
+## State Management
+
+- Keep state as close as possible to where it's used
+- Use React Context for global state that changes infrequently
+- Implement Zustand for more complex global state management
+- Use TanStack Query for server state management
+- Always maintain immutability when updating state
+- Implement proper loading, error, and success states
+- Follow the store/selector pattern for accessing state
+- Keep derived state calculations in selectors, not components
+
+## Testing Requirements
+
+- Achieve minimum 80% test coverage across the codebase
+- Write unit tests for all utility functions
+- Create integration tests for key user flows
+- Use React Testing Library for component testing
+- Implement e2e tests with Playwright for critical paths
+- Test both light and dark modes where applicable
+- Test all states: loading, error, empty, and data states
+
+## Code Quality
+
+- Run ESLint and Prettier before each commit
+- Follow the established project folder structure
+- Document complex logic with descriptive comments
+- Use consistent naming conventions
+- Implement proper error handling with user-friendly messages
+- Follow the principle of least privilege for component props
+
+## Security Best Practices
+
+- Sanitize all user inputs
+- Implement proper authentication checks
+- Use Content Security Policy
+- Avoid exposing sensitive information in client-side code
+- Protect against XSS with proper escaping
+
+## Styling Guidelines
+
+- Follow the Tailwind CSS naming conventions
+- Use the design token system consistently
+- Implement responsive designs with mobile-first approach
+- Maintain dark mode compatibility
+- Use CSS-in-JS or Tailwind for styling, avoiding global CSS
+- Follow spacing and sizing guidelines from the design system
+
+## API Communication
+
+- Use TanStack Query for data fetching and caching
+- Implement proper error handling for API requests
+- Use TypeScript interfaces for API response types
+- Handle loading and error states consistently
+- Implement retry logic for failed requests
+- Use appropriate caching strategies
+- Implement optimistic updates for better user experience
+
+## Build and Deployment
+
+- Optimize images, fonts, and other assets during build
+- Enable tree shaking to eliminate dead code
+- Configure proper cache headers for static assets
+- Run performance and accessibility checks in CI pipeline
+- Automate version management with semantic versioning
+- Conduct bundle size analysis before merging PRs

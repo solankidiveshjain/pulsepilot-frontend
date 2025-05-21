@@ -24,7 +24,18 @@ export function EmojiFilterChip({
 }: EmojiFilterChipProps) {
   // Get category-specific styles
   const getCategoryStyles = () => {
-    if (isSelected) return "";
+    if (isSelected) {
+      switch (category) {
+        case "emotion":
+          return "bg-blue-100 border-blue-400 text-blue-800";
+        case "sentiment":
+          return "bg-green-100 border-green-400 text-green-800";
+        case "category":
+          return "bg-purple-100 border-purple-400 text-purple-800";
+        default:
+          return "bg-primary/10 border-primary/30 text-primary";
+      }
+    }
 
     switch (category) {
       case "emotion":
@@ -44,9 +55,8 @@ export function EmojiFilterChip({
         "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-150 ease-in-out",
         "border border-gray-300",
         "text-gray-600 hover:border-gray-500 hover:bg-gray-100 hover:text-gray-900",
-        "aria-selected:border-gray-900 aria-selected:bg-gray-900 aria-selected:text-white",
-        "focus-visible:ring-offset-1 ring-gray-400 focus:outline-none focus-visible:ring-2",
         getCategoryStyles(),
+        "focus-visible:ring-offset-1 ring-gray-400 focus:outline-none focus-visible:ring-2",
         className
       )}
       aria-selected={isSelected}
@@ -59,7 +69,9 @@ export function EmojiFilterChip({
       </span>
       {label}
       {count !== undefined && (
-        <span className="ml-1 text-xs font-semibold text-gray-500 aria-selected:text-gray-300">
+        <span
+          className={cn("ml-1 text-xs font-semibold", isSelected ? "opacity-80" : "text-gray-500")}
+        >
           {count}
         </span>
       )}

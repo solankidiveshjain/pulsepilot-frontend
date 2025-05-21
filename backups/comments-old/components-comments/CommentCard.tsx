@@ -13,7 +13,9 @@ import {
   AlertCircle,
   Archive,
   Check,
+  Eye,
   Flag,
+  Maximize2,
   MessageSquare,
   MoreVertical,
   ThumbsUp,
@@ -32,14 +34,9 @@ export interface CommentCardProps {
   onSelect?: (id: string) => void;
   onReply?: (id: string) => void;
   onToggleThread?: (id: string) => void;
+  onViewFullPost?: (postId: string, commentId: string) => void;
   repliesCount?: number;
 }
-
-const PostPreviewFallback = ({ platform }: { platform: string }) => (
-  <div className="flex h-[56px] w-[56px] items-center justify-center rounded bg-muted text-muted-foreground">
-    {platform === "youtube" ? "▶️" : platform === "instagram" ? "📷" : "🐦"}
-  </div>
-);
 
 // Memoize the component to prevent unnecessary re-renders
 export const CommentCard = memo(function CommentCard({
@@ -47,20 +44,20 @@ export const CommentCard = memo(function CommentCard({
   isSelected = false,
   isExpanded = false,
   onSelect,
-  onReply,
   onToggleThread,
+  onViewFullPost,
   repliesCount = 0,
 }: CommentCardProps) {
-  const { postPreview, isLoading } = usePostPreview(comment.postId);
+  const { postPreview } = usePostPreview(comment.postId);
   const [isHovered, setIsHovered] = useState(false);
 
   const handleSelect = () => {
     if (onSelect) onSelect(comment.commentId);
   };
 
-  const handleReply = (e: React.MouseEvent) => {
+  const handleViewFullPost = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onReply) onReply(comment.commentId);
+    if (onViewFullPost) onViewFullPost(comment.postId, comment.commentId);
   };
 
   // Format the date for display
@@ -97,12 +94,14 @@ export const CommentCard = memo(function CommentCard({
   return (
     <div
       className={cn(
-        "rounded-lg border p-4 shadow-sm transition-colors",
-        isSelected && "border-primary/30 bg-primary/5 shadow-md",
+        "relative rounded-lg border shadow-sm transition-all",
+        isSelected
+          ? "border-primary bg-primary/5 shadow-md ring-1 ring-primary/20"
+          : "border-border bg-card hover:bg-gray-50 dark:hover:bg-gray-800/10",
         comment.flagged && "border-l-4 border-l-red-500",
-        !isSelected && !comment.flagged && "border-border bg-card shadow hover:bg-card/80",
+        !isSelected && !comment.flagged && "hover:shadow",
         !comment.read && "border-l-4 border-l-blue-500 dark:border-l-blue-400",
-        comment.archived && "opacity-70"
+        comment.archived && "opacity-75"
       )}
       onClick={handleSelect}
       onMouseEnter={() => setIsHovered(true)}
@@ -112,24 +111,24 @@ export const CommentCard = memo(function CommentCard({
     >
       {/* Selection checkbox - only visible when in selection mode or selected */}
       {onSelect && (
-        <div className="absolute left-4 top-4">
+        <div className="absolute left-3 top-3 z-10">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={() => {}}
-            className="h-4 w-4 rounded border-gray-300"
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
         </div>
       )}
 
-      <div className={cn("flex gap-3", onSelect && "pl-6")}>
-        {/* Author avatar - 40x40px as per Figma spec */}
+      <div className={cn("flex gap-2 p-3", onSelect && "pl-8")}>
+        {/* Author avatar - 36x36px for more compact design */}
         <div className="flex-shrink-0">
           <Image
             src={comment.author.profileImageUrl || "/images/default-avatar.png"}
             alt={comment.author.name}
-            width={40}
-            height={40}
+            width={36}
+            height={36}
             className="rounded-full"
           />
         </div>
@@ -138,13 +137,14 @@ export const CommentCard = memo(function CommentCard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {/* Author name */}
-              <h3 className="truncate text-base font-medium text-[#111827] dark:text-[#F9FAFB]">
-                {comment.author.name}
-              </h3>
+              <h3 className="truncate text-sm font-medium">{comment.author.name}</h3>
 
               {/* Platform pill */}
               <span
-                className={cn("rounded-full px-2 py-0.5 text-xs font-medium", getPlatformStyles())}
+                className={cn(
+                  "rounded-full px-1.5 py-0.5 text-xs font-medium",
+                  getPlatformStyles()
+                )}
               >
                 {getPlatformName()}
               </span>
@@ -152,7 +152,7 @@ export const CommentCard = memo(function CommentCard({
               {/* Attention indicator */}
               {comment.requiresAttention && (
                 <span className="flex-shrink-0">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
                 </span>
               )}
             </div>
@@ -162,7 +162,7 @@ export const CommentCard = memo(function CommentCard({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="rounded-full p-1 transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="rounded-full p-1 transition-colors hover:bg-muted focus:outline-none focus:ring-1 focus:ring-primary"
                     aria-label="Open comment actions"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -192,102 +192,74 @@ export const CommentCard = memo(function CommentCard({
             )}
           </div>
 
-          {/* Comment content - max 3 lines unless expanded */}
-          <p
-            className={cn(
-              "mt-2 text-sm text-[#374151] dark:text-[#9CA3AF]",
-              !isExpanded && "line-clamp-3"
-            )}
-          >
-            {comment.text}
-          </p>
+          {/* Comment text - clamped to 2 lines */}
+          <p className="mt-1 line-clamp-2 text-sm">{comment.text}</p>
 
-          {/* Reply button below comment text */}
-          {onReply && (
-            <button
-              className="mt-2 flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-              onClick={handleReply}
-            >
-              <span>↩️ Reply</span>
-            </button>
+          {/* Post context - only shown if postPreview is available */}
+          {postPreview && (
+            <div className="mt-2 flex items-center gap-2 rounded-md bg-muted/30 p-1 text-xs">
+              <span className="line-clamp-1 text-muted-foreground">
+                Re: {postPreview.title || "Post from " + getPlatformName()}
+              </span>
+              <button
+                onClick={handleViewFullPost}
+                className="ml-auto flex-shrink-0 rounded p-0.5 text-primary hover:bg-primary/10"
+                aria-label="View full post"
+              >
+                <Maximize2 className="h-3 w-3" />
+              </button>
+            </div>
           )}
 
-          {/* Post preview if available - lazy loaded */}
-          {postPreview ? (
-            <div className="mt-3 flex items-center gap-2 rounded bg-muted/50 p-2">
-              {postPreview.thumbnailUrl ? (
-                <Image
-                  src={postPreview.thumbnailUrl}
-                  alt={postPreview.title}
-                  width={56}
-                  height={56}
-                  className="rounded object-cover"
-                />
-              ) : (
-                <PostPreviewFallback platform={comment.platform} />
-              )}
-              <span className="line-clamp-2 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
-                {postPreview.title || postPreview.caption}
-              </span>
-            </div>
-          ) : isLoading ? (
-            <div className="mt-3 flex h-14 animate-pulse items-center gap-2 rounded bg-muted/50 p-2">
-              <div className="h-14 w-14 rounded bg-muted-foreground/20"></div>
-              <div className="h-3 w-2/3 rounded bg-muted-foreground/20"></div>
-            </div>
-          ) : null}
+          {/* Metrics row - aligned horizontally */}
+          <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+            {/* Post date */}
+            <span>{formattedDate}</span>
 
-          {/* Engagement stats and replies info */}
-          <div className="mt-3 flex items-center justify-between">
-            <div className="flex items-center gap-4 text-xs text-[#6B7280] dark:text-[#9CA3AF]">
+            {/* Like count */}
+            {comment.likes > 0 && (
               <span className="flex items-center gap-1">
                 <ThumbsUp className="h-3 w-3" />
                 {comment.likes}
               </span>
-              {repliesCount > 0 && (
-                <button
-                  className="flex items-center gap-1 rounded px-1 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onToggleThread) {
-                      onToggleThread(comment.commentId);
-                    }
-                  }}
-                  aria-expanded={isExpanded}
-                  aria-controls={`replies-${comment.commentId}`}
-                  aria-label={
-                    isExpanded ? `Hide replies (${repliesCount})` : `Show replies (${repliesCount})`
-                  }
-                >
-                  <MessageSquare className="h-3 w-3" />
-                  {repliesCount} {repliesCount === 1 ? "reply" : "replies"}
-                </button>
-              )}
-              <span>{formattedDate}</span>
-            </div>
-          </div>
+            )}
 
-          {/* Replies shown directly in the document flow */}
-          {isExpanded && repliesCount > 0 && (
-            <div
-              id={`replies-${comment.commentId}`}
-              className="relative mt-4 border-t border-border/30 pb-2 pt-3 before:absolute before:left-[20px] before:top-0 before:h-[2px] before:w-[30px] before:bg-border/30"
-              aria-live="polite"
-            >
-              <ReplyThread
-                commentId={comment.commentId}
-                repliesCount={repliesCount}
-                isExpanded={isExpanded}
-              />
-            </div>
-          )}
+            {/* Reply count with thread toggle */}
+            {repliesCount > 0 && onToggleThread && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleThread(comment.commentId);
+                }}
+                className="flex items-center gap-1 rounded hover:text-foreground focus:outline-none"
+              >
+                <MessageSquare className="h-3 w-3" />
+                <span>{repliesCount} replies</span>
+              </button>
+            )}
+
+            {/* View post button */}
+            {onViewFullPost && !postPreview && (
+              <button
+                onClick={handleViewFullPost}
+                className="ml-auto flex items-center gap-1 rounded hover:text-foreground focus:outline-none"
+              >
+                <Eye className="h-3 w-3" />
+                <span>View post</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Flagged indicator */}
-      {comment.flagged && (
-        <div className="absolute right-4 top-4">
-          <Flag className="h-4 w-4 text-red-500" />
+      {/* Replies section - only visible when expanded */}
+      {isExpanded && repliesCount > 0 && (
+        <div className="border-t border-border bg-card/50 px-3 py-2">
+          <ReplyThread
+            commentId={comment.commentId}
+            repliesCount={repliesCount}
+            isExpanded={isExpanded}
+          />
         </div>
       )}
     </div>

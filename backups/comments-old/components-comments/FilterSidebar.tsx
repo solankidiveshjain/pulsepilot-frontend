@@ -220,10 +220,13 @@ export const FilterSidebar = memo(function FilterSidebar({
   // Clear all filters
   const clearFilters = useCallback(() => {
     onFilterChange({});
-    updateEmotions([]);
-    updateSentiments([]);
-    updateCategories([]);
-  }, [onFilterChange, updateEmotions, updateSentiments, updateCategories]);
+    setSelectedEmotions([]);
+    setSelectedSentiments([]);
+    setSelectedCategories([]);
+    if (onEmotionChange) onEmotionChange([]);
+    if (onSentimentChange) onSentimentChange([]);
+    if (onCategoryChange) onCategoryChange([]);
+  }, [onFilterChange, onEmotionChange, onSentimentChange, onCategoryChange]);
 
   // Toggle emoji-based filter
   const toggleEmojiFilter = useCallback(
@@ -325,9 +328,9 @@ export const FilterSidebar = memo(function FilterSidebar({
 
       {/* Filter content */}
       <div className="flex h-full flex-col overflow-hidden">
-        <div className="flex-1 space-y-4 overflow-y-auto p-4 pb-16">
-          {/* Selected comment count indicator */}
-          {selectedCommentIds && selectedCommentIds.length > 0 && (
+        {/* Selected comment count indicator - FIXED HEIGHT regardless of visibility */}
+        <div className="mb-4 min-h-[40px] px-4 pt-4">
+          {selectedCommentIds && selectedCommentIds.length > 0 ? (
             <div className="flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium">
               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white">
                 <span>{selectedCommentIds.length}</span>
@@ -337,12 +340,16 @@ export const FilterSidebar = memo(function FilterSidebar({
                 selected
               </span>
             </div>
+          ) : (
+            <div className="h-5"></div>
           )}
+        </div>
 
+        <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
           {/* Filter drawer toggle button */}
           <button
             onClick={() => setFilterDrawerOpen(!isFilterDrawerOpen)}
-            className="flex w-full items-center justify-between rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium uppercase tracking-wide hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
+            className="mt-1 flex w-full items-center justify-between rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium uppercase tracking-wide hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
           >
             <div className="flex items-center gap-2">
               <Filter className="h-3.5 w-3.5" />
@@ -510,16 +517,19 @@ export const FilterSidebar = memo(function FilterSidebar({
         </div>
 
         {/* Clear filters - fixed at bottom */}
-        {hasActiveFilters && (
-          <div className="sticky bottom-0 border-t border-gray-200 bg-card p-3 shadow-md dark:border-gray-800">
-            <button
-              className="w-full rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              onClick={clearFilters}
-            >
-              Clear all filters
-            </button>
-          </div>
-        )}
+        <div className="sticky bottom-0 flex h-[48px] items-center border-t border-gray-200 bg-card p-3 shadow-md transition-opacity duration-300 dark:border-gray-800">
+          <button
+            className={cn(
+              "w-full rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700",
+              !hasActiveFilters && "pointer-events-none opacity-0"
+            )}
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            aria-hidden={!hasActiveFilters}
+          >
+            Clear all filters
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -113,6 +113,185 @@ const mockCommentData: Comment[] = Array.from({ length: 100 }, (_, i) =>
   generateMockComment(i + 1)
 );
 
+// Generate more realistic comment text with varied content
+const COMMENT_TEXTS = [
+  "This content is amazing! I've been following your work for years and it keeps getting better.",
+  "I disagree with some of your points. Have you considered the alternative perspective?",
+  "Could you please explain the third point in more detail? I'm not sure I understand completely.",
+  "First! Been waiting for this new post all week!",
+  "This helped me solve a problem I've been stuck on for weeks. Thank you!",
+  "Your insights have really helped me improve my own strategy. Keep up the great work!",
+  "I shared this with my team and we've implemented your suggestions with great results.",
+  "The quality of your content has dropped recently. I hope you get back to your usual standards soon.",
+  "This is exactly what I needed right now. Perfect timing!",
+  "I have a question about implementing this in a different context. Would it still work?",
+  "Your perspectives are always refreshing and make me think outside the box.",
+  "Not your best work. I expected more depth on this topic.",
+  "I've been implementing these techniques for months and they've transformed my business.",
+  "Would love to see a follow-up piece that goes deeper on point #2.",
+  "This contradicts what you said in your previous post. Has your position changed?",
+  "This content is so inspirational! Just what I needed today.",
+  "I've noticed similar trends in my industry. Great analysis!",
+  "Can you recommend any resources to learn more about this topic?",
+  "I think you missed an important factor in your analysis - market conditions are changing rapidly.",
+  "Using these techniques increased my engagement by 40% in just two weeks.",
+];
+
+// Generate a wider range of realistic user names
+const AUTHOR_NAMES = [
+  "Sarah Johnson",
+  "David Chen",
+  "Emma Williams",
+  "Alex Thompson",
+  "Michael Rodriguez",
+  "Priya Patel",
+  "James Wilson",
+  "Zoe Garcia",
+  "Hiroshi Nakamura",
+  "Olivia Brown",
+  "Carlos Mendez",
+  "Fatima Al-Farsi",
+  "Robert Kim",
+  "Ana Silva",
+  "John Okafor",
+  "Wei Zhang",
+  "Sophia Martinez",
+  "Raj Patel",
+  "Isabella Romano",
+  "Mohammed Hassan",
+];
+
+// Create more varied post titles
+const POST_TITLES = [
+  "10 Essential Strategies for Social Media Growth in 2025",
+  "Why Content Quality Matters More Than Ever",
+  "The Future of Digital Marketing: Trends to Watch",
+  "How to Increase Your Engagement Rates by 300%",
+  "Building a Loyal Community: Beyond the Numbers",
+  "Authenticity vs. Polish: Finding the Right Balance",
+  "Data-Driven Content Creation: A Step-by-Step Guide",
+  "The Psychology Behind Viral Content",
+  "Cross-Platform Strategy: Maintaining a Consistent Brand Voice",
+  "How We Gained 100K Followers in 3 Months",
+];
+
+// Create a larger pool of posts with more details
+const POSTS = POST_TITLES.map((title, index) => ({
+  id: `post-${index + 1}`,
+  title,
+  platform: ["youtube", "instagram", "twitter"][Math.floor(Math.random() * 3)] as CommentPlatform,
+  publishedAt: new Date(Date.now() - Math.random() * 30 * 86400000).toISOString(), // Random date in last 30 days
+  content:
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+  imageUrl: `https://picsum.photos/seed/${index + 1}/600/400`,
+  engagement: {
+    likes: Math.floor(Math.random() * 10000),
+    comments: Math.floor(Math.random() * 1000),
+    shares: Math.floor(Math.random() * 500),
+  },
+}));
+
+// Generate a realistic set of comments with diverse attributes
+export function generateComments(count: number, filters?: CommentFilters): Comment[] {
+  const comments: Comment[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const commentId = `comment-${Date.now()}-${i}`;
+    const postIndex = Math.floor(Math.random() * POSTS.length);
+    const postId = POSTS[postIndex].id;
+    const platform = POSTS[postIndex].platform;
+
+    // Random timestamp within the last 30 days
+    const timestamp = new Date();
+    timestamp.setDate(timestamp.getDate() - Math.floor(Math.random() * 30));
+
+    // Varied engagement metrics
+    const likes = Math.floor(Math.random() * 150);
+    const repliesCount = Math.floor(Math.random() * 20);
+
+    // Varied status flags with realistic distribution
+    const flagged = Math.random() < 0.15; // 15% of comments are flagged
+    const read = Math.random() < 0.6; // 60% of comments are read
+    const requiresAttention = Math.random() < 0.2; // 20% require attention
+    const archived = Math.random() < 0.1; // 10% are archived
+
+    // Create the comment
+    const comment: Comment = {
+      commentId,
+      text: COMMENT_TEXTS[Math.floor(Math.random() * COMMENT_TEXTS.length)],
+      postedAt: timestamp.toISOString(),
+      likes,
+      repliesCount,
+      flagged,
+      requiresAttention,
+      platform,
+      author: {
+        name: AUTHOR_NAMES[Math.floor(Math.random() * AUTHOR_NAMES.length)],
+        profileImageUrl: `https://randomuser.me/api/portraits/${Math.random() > 0.7 ? "women" : "men"}/${Math.floor(Math.random() * 70)}.jpg`,
+      },
+      postId,
+      read,
+      archived,
+    };
+
+    comments.push(comment);
+  }
+
+  return comments;
+}
+
+// Mock API endpoint for fetching comments
+export const fetchComments = async ({
+  page = 1,
+  filters = {},
+}: { page?: number; filters?: Record<string, string[]> } = {}) => {
+  const response = await fetch(`/api/comments?page=${page}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch comments");
+  }
+  return response.json();
+};
+
+// Function to get full post details by ID
+export async function fetchPostById(postId: string) {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 300 + Math.random() * 300));
+
+  const post = POSTS.find((p) => p.id === postId);
+
+  if (!post) {
+    throw new Error(`Post not found: ${postId}`);
+  }
+
+  // Add more detailed data for the full post view
+  return {
+    ...post,
+    commentCount: Math.floor(Math.random() * 1000),
+    viewCount: Math.floor(Math.random() * 100000),
+    replyCount: Math.floor(Math.random() * 200),
+    postUrl: `https://example.com/posts/${postId}`,
+    // Add some related comments to the post
+    comments: generateComments(5).map((comment) => ({
+      ...comment,
+      postId: post.id,
+    })),
+  };
+}
+
+// Function to perform bulk actions on comments
+export async function performBulkAction(
+  action: "mark_read" | "flag" | "unflag" | "archive" | "unarchive",
+  commentIds: string[]
+): Promise<{ success: boolean }> {
+  // Simulate network delay
+  await new Promise((resolve) => setTimeout(resolve, 400));
+
+  console.log(`Performed ${action} on comments:`, commentIds);
+
+  // In a real app, this would update the database
+  return { success: true };
+}
+
 /**
  * Fetch comments feed with pagination and filtering support
  */

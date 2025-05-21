@@ -1,0 +1,137 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
+      "source.organizeImports": "explicit",
+    },
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+    "eslint.rules.customizations": [
+      { "rule": "react-hooks/exhaustive-deps", "severity": "error" },
+      { "rule": "@typescript-eslint/no-explicit-any", "severity": "error" },
+      { "rule": "jsx-a11y/*", "severity": "error" },
+    ],
+    "workbench.colorCustomizations": {
+      "activityBar.background": "#264064",
+      "activityBar.foreground": "#E7E7E7",
+      "statusBar.background": "#264064",
+      "statusBar.foreground": "#E7E7E7",
+      "titleBar.activeBackground": "#264064",
+      "titleBar.activeForeground": "#E7E7E7",
+    },
+    "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+      "*.tsx": "${capture}.test.tsx, ${capture}.stories.tsx",
+      "*.ts": "${capture}.test.ts, ${capture}.spec.ts",
+    },
+    "search.exclude": {
+      "**/.git": true,
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/dist": true,
+    },
+    "workbench.editor.labelFormat": "medium",
+    "editor.guides.bracketPairs": true,
+    "workbench.startupEditor": "none",
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/node_modules": false,
+    },
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/**": true,
+      "**/.next/**": true,
+    },
+    "todo-tree.general.tags": ["TODO", "FIXME", "BUG", "HACK", "REVIEW"],
+    "todohighlight.keywords": [
+      {
+        "text": "FIXME",
+        "color": "white",
+        "backgroundColor": "#ff6347",
+      },
+      {
+        "text": "HACK",
+        "color": "white",
+        "backgroundColor": "#ff69b4",
+      },
+    ],
+    "workbench.colorTheme": "Default Dark Modern",
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "workbench.editor.limit.enabled": true,
+    "workbench.editor.limit.value": 8,
+    "workbench.editor.enablePreview": true,
+    "workbench.editor.closeOnFileDelete": true,
+    "workbench.tree.expandMode": "singleClick",
+    "workbench.tree.indent": 16,
+    "breadcrumbs.enabled": true,
+    "editor.renderWhitespace": "boundary",
+    "editor.renderControlCharacters": true,
+    "editor.accessibilitySupport": "on",
+  },
+  "extensions": {
+    "recommendations": [
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "streetsidesoftware.code-spell-checker",
+      "dsznajder.es7-react-js-snippets",
+      "naumovs.color-highlight",
+      "wayou.vscode-todo-highlight",
+      "gruntfuggly.todo-tree",
+      "formulahendry.auto-rename-tag",
+      "mgmcdermott.vscode-language-babel",
+      "ms-vscode.vscode-typescript-next",
+    ],
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "chrome",
+        "request": "launch",
+        "name": "Launch Chrome against localhost",
+        "url": "http://localhost:3000/comments",
+        "webRoot": "${workspaceFolder}",
+      },
+    ],
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Lint Comments Components",
+        "type": "shell",
+        "command": "npx eslint \"src/components/comments/**/*.{ts,tsx}\"",
+        "problemMatcher": ["$eslint-stylish"],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new",
+        },
+      },
+      {
+        "label": "Test Comments Components",
+        "type": "shell",
+        "command": "npm test -- --testPathPattern=src/components/comments",
+        "problemMatcher": [],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new",
+        },
+      },
+    ],
+  },
+}

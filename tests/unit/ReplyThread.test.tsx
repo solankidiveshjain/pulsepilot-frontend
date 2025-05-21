@@ -11,7 +11,6 @@ jest.mock("@/hooks/use-comments", () => ({
 Element.prototype.scrollIntoView = jest.fn();
 
 describe("ReplyThread", () => {
-  const mockToggle = jest.fn();
   const mockReplyToComment = jest.fn();
 
   beforeEach(() => {
@@ -50,49 +49,28 @@ describe("ReplyThread", () => {
     });
   });
 
-  it("renders collapsed state when not expanded", () => {
-    render(
-      <ReplyThread
-        commentId="comment-1"
-        repliesCount={3}
-        isExpanded={false}
-        onToggle={mockToggle}
-      />
+  it("doesn't render anything when not expanded", () => {
+    const { container } = render(
+      <ReplyThread commentId="comment-1" repliesCount={3} isExpanded={false} />
     );
 
-    // Check if the collapsed view is shown
-    expect(screen.getByText("3 replies → Expand thread")).toBeInTheDocument();
-    // Replies shouldn't be visible
-    expect(screen.queryByText("This is a reply")).not.toBeInTheDocument();
+    // Component should not render anything when not expanded
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("renders expanded state with replies when expanded", () => {
-    render(
-      <ReplyThread commentId="comment-1" repliesCount={3} isExpanded={true} onToggle={mockToggle} />
-    );
+    render(<ReplyThread commentId="comment-1" repliesCount={3} isExpanded={true} />);
 
-    // Check if the expanded view is shown
-    expect(screen.getByText("Thread open")).toBeInTheDocument();
-    // Replies should be visible
+    // Check if replies are visible
     expect(screen.getByText("This is a reply")).toBeInTheDocument();
     expect(screen.getByText("This is another reply")).toBeInTheDocument();
+
     // Check if author names are displayed
     expect(screen.getByText("Reply User")).toBeInTheDocument();
     expect(screen.getByText("Another User")).toBeInTheDocument();
-  });
 
-  it("calls onToggle when clicking on thread toggle button", () => {
-    render(
-      <ReplyThread
-        commentId="comment-1"
-        repliesCount={3}
-        isExpanded={false}
-        onToggle={mockToggle}
-      />
-    );
-
-    fireEvent.click(screen.getByText("3 replies → Expand thread"));
-    expect(mockToggle).toHaveBeenCalledWith("comment-1");
+    // Check for ARIA attributes
+    expect(screen.getByRole("log")).toHaveAttribute("aria-label", "3 replies to comment");
   });
 
   it("shows loading state when thread is loading", () => {
@@ -104,9 +82,7 @@ describe("ReplyThread", () => {
       refetch: jest.fn(),
     });
 
-    render(
-      <ReplyThread commentId="comment-1" repliesCount={3} isExpanded={true} onToggle={mockToggle} />
-    );
+    render(<ReplyThread commentId="comment-1" repliesCount={3} isExpanded={true} />);
 
     // Check if loading skeletons are shown
     expect(screen.getAllByTestId("loading-skeleton")).toHaveLength(3);
@@ -118,7 +94,6 @@ describe("ReplyThread", () => {
         commentId="comment-1"
         repliesCount={3}
         isExpanded={true}
-        onToggle={mockToggle}
         onReplyToComment={mockReplyToComment}
       />
     );
@@ -133,14 +108,24 @@ describe("ReplyThread", () => {
 
   it("does not render anything when repliesCount is 0", () => {
     const { container } = render(
-      <ReplyThread
-        commentId="comment-1"
-        repliesCount={0}
-        isExpanded={false}
-        onToggle={mockToggle}
-      />
+      <ReplyThread commentId="comment-1" repliesCount={0} isExpanded={true} />
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("applies custom className when provided", () => {
+    render(
+      <ReplyThread
+        commentId="comment-1"
+        repliesCount={3}
+        isExpanded={true}
+        className="custom-class"
+      />
+    );
+
+    // Check if custom class is applied
+    const threadContainer = screen.getByRole("log").parentElement;
+    expect(threadContainer).toHaveClass("custom-class");
   });
 });

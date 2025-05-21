@@ -277,3 +277,59 @@ When implementing complex UI features, especially those with dynamic content or 
      - Use fixed containers with max-height and internal scrolling
      - Avoid dynamic height calculations during runtime
      - Ensure proper parent-child containment in the DOM
+
+## PulsePilot Design System Guidelines
+
+### Virtualization & React 19 Compatibility
+
+- Use `react-window` (not `react-virtualized`) for all list virtualization
+- Do not use `@ts-expect-error`, `any`, or legacy ref hacks for React 19 compatibility
+- Use dynamic measurement for virtualization if content height is not fixed (see react-window docs)
+- Test virtualization on both large datasets (1000+ items) and small datasets (10-20 items)
+- Always handle loading, error, and empty states appropriately
+
+### Layout, Spacing & Responsiveness
+
+- All spacing, padding, and layout must use Tailwind responsive classes and be handled inside components, not with outer margins or hotfixes
+- All new code must be responsive and tested at mobile and desktop breakpoints
+- Use a 12-column grid for desktop (`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-[80px]`), and stacked layout for mobile
+- Follow atomic design principles for component organization
+- Follow consistent spacing scale from the design system
+
+### Accessibility (A11y)
+
+- All interactive elements must be accessible (keyboard, aria, focus ring)
+- Use semantic HTML elements
+- Include proper ARIA labels and roles where needed
+- Ensure keyboard navigation works throughout the application
+- Provide adequate color contrast (WCAG AA compliance)
+- Test with screen readers
+- Support focus management, especially for modals and dialogs
+
+### Performance Guidelines
+
+- Minimize component re-renders by using memoization (React.memo, useMemo, useCallback)
+- Implement code splitting with dynamic imports for routes and large components
+- Use Next.js Image component for all images to ensure proper optimization
+- Optimize CSS with Tailwind's JIT mode and purge unused styles
+- Monitor bundle size using bundle analyzer during builds
+- Implement virtualization for long lists using react-window
+- Use proper loading states and skeleton screens during data fetching
+
+### Type Safety
+
+- Use TypeScript strict mode throughout the codebase
+- Define explicit return types for all functions
+- Create comprehensive interfaces/types for all data structures
+- Avoid using 'any' type - use unknown if type is truly unknown
+- Use discriminated unions for complex state management
+- Ensure proper null checking with optional chaining and nullish coalescing
+
+### State Management
+
+- Keep state as close as possible to where it's used
+- Use React Context for global state that changes infrequently
+- Implement Zustand for more complex global state management
+- Use TanStack Query for server state management
+- Always maintain immutability when updating state
+- Implement proper loading, error, and success states

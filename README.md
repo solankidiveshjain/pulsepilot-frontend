@@ -55,12 +55,21 @@ PulsePilot is a modern social media management platform focused on comment manag
 
 This project follows atomic design principles (atoms, molecules, organisms, templates, pages) for component organization. See [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) for details on directory organization and coding standards.
 
+### Design Guidelines
+
+We maintain strict design and implementation guidelines to ensure consistency and quality:
+
+- General React best practices: [docs/react-best-practices.md](./docs/react-best-practices.md)
+- Comments interface specific guidelines: [docs/comments-interface-guidelines.md](./docs/comments-interface-guidelines.md)
+
+All pull requests must adhere to these guidelines or they will be rejected.
+
 ### Performance Guidelines
 
 - Use memoization (React.memo, useMemo, useCallback) to minimize re-renders
 - Implement code splitting with dynamic imports for routes and large components
 - Use Next.js Image component for all images to ensure proper optimization
-- Implement virtualization for long lists using react-virtualized
+- Implement virtualization for long lists using react-window (not react-virtualized)
 - Use bundle analyzer to monitor bundle size: `npm run analyze`
 - Implement proper loading states and skeleton screens during data fetching
 

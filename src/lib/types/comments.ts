@@ -22,12 +22,17 @@ export interface Comment {
   postId: string;
   read: boolean;
   archived: boolean;
+  emotions?: string[];
+  sentiment?: string;
+  categories?: string[];
 }
 
 export interface CommentsResponse {
-  page: number;
-  nextCursor?: string;
   comments: Comment[];
+  hasNextPage?: boolean;
+  page?: number;
+  total?: number;
+  nextCursor?: string;
 }
 
 export interface PostPreview {
@@ -83,4 +88,7 @@ export interface CommentFilters {
     end: string;
   };
   search?: string;
+  emotions?: string[];
+  sentiments?: string[];
+  categories?: string[];
 }

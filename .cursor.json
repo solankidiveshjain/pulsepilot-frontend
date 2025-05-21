@@ -1,0 +1,45 @@
+{
+  "formatOnSave": true,
+  "defaultFormatter": "prettier",
+  "versionControl": {
+    "enableGitLens": true,
+    "enableGitBlame": true
+  },
+  "linting": {
+    "enableESLint": true,
+    "enableTSServer": true,
+    "runOnSave": true,
+    "runOnType": true
+  },
+  "ai": {
+    "customInstructions": [
+      "PulsePilot Frontend follows strict design guidelines documented in .cursorrules file. All code must adhere to these standards.",
+      "For components/comments directory, enforce strict typing and React best practices.",
+      "Use react-window (not react-virtualized) for all virtualization.",
+      "Follow atomic design principles with UI components in ui/, containers in containers/, state in state/, and models in models/.",
+      "Ensure proper null checking with optional chaining and nullish coalescing.",
+      "Maintain component structure under 250 lines of code.",
+      "Use Zustand for state management with selectors for performance.",
+      "Follow the 12-column grid for responsive layouts.",
+      "Always use proper error handling and loading states.",
+      "Do not use @ts-ignore or any type under any circumstances."
+    ]
+  },
+  "autoComplete": {
+    "includeDocs": true,
+    "snippetsEnabled": true
+  },
+  "accessibility": {
+    "enforceA11y": true
+  },
+  "codeNavigation": {
+    "enableDefinitions": true,
+    "enableReferences": true,
+    "enableSymbols": true
+  },
+  "errorLens": {
+    "enabled": true,
+    "delay": 100,
+    "enabledInEditMode": true
+  }
+}

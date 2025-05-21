@@ -15,6 +15,7 @@ interface CommentListProps {
   expandedThreadIds: Set<string>;
   onSelectComment: (id: string) => void;
   onToggleThread: (id: string) => void;
+  onViewFullPost?: (postId: string, commentId: string) => void;
 }
 
 /**
@@ -32,6 +33,7 @@ export const CommentList = memo(function CommentList({
   expandedThreadIds,
   onSelectComment,
   onToggleThread,
+  onViewFullPost,
 }: CommentListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Create a map of refs for each comment for better scroll management
@@ -91,24 +93,29 @@ export const CommentList = memo(function CommentList({
   }, []);
 
   return (
-    <div ref={containerRef} className="h-[80vh] min-h-[400px] w-full overflow-auto">
+    <div
+      ref={containerRef}
+      className="h-[calc(100vh-136px)] min-h-[400px] w-full overflow-auto pr-1"
+    >
       {isLoading && comments.length === 0 ? (
         // Loading skeleton
-        Array.from({ length: 5 }).map((_, index) => (
-          <div key={index} className="mb-4 animate-pulse rounded-lg border p-4 shadow-sm">
-            <div className="flex gap-3">
-              <div className="h-10 w-10 rounded-full bg-muted"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-1/4 rounded bg-muted"></div>
-                <div className="h-3 w-full rounded bg-muted"></div>
-                <div className="h-3 w-3/4 rounded bg-muted"></div>
+        <div className="space-y-4">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="w-full animate-pulse rounded-lg border p-4 shadow-sm">
+              <div className="flex gap-3">
+                <div className="h-10 w-10 rounded-full bg-muted"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-1/4 rounded bg-muted"></div>
+                  <div className="h-3 w-full rounded bg-muted"></div>
+                  <div className="h-3 w-3/4 rounded bg-muted"></div>
+                </div>
               </div>
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       ) : comments.length === 0 ? (
         // Empty state
-        <div className="flex h-40 flex-col items-center justify-center rounded-lg border p-6 shadow-sm">
+        <div className="flex w-full flex-col items-center justify-center rounded-lg border p-6 shadow-sm">
           <h3 className="text-lg font-medium">No comments found</h3>
           <p className="text-sm text-muted-foreground">
             Try adjusting your filters or check back later.
@@ -116,11 +123,11 @@ export const CommentList = memo(function CommentList({
         </div>
       ) : (
         // Regular scroll container with all comments
-        <div className="space-y-4 pb-4">
+        <div className="space-y-4 pb-1">
           {comments.map((comment) => (
             <div
               key={comment.commentId}
-              className="relative"
+              className="relative w-full"
               ref={(el) => setCommentRef(el, comment.commentId)}
             >
               <CommentCard
@@ -130,17 +137,18 @@ export const CommentList = memo(function CommentList({
                 isExpanded={expandedThreadIds.has(comment.commentId)}
                 repliesCount={comment.repliesCount}
                 onToggleThread={handleToggleThread}
+                onViewFullPost={onViewFullPost}
               />
             </div>
           ))}
 
           {/* Load more button/indicator */}
           {hasNextPage && (
-            <div ref={loadMoreRef} className="mt-4 flex items-center justify-center py-4">
+            <div ref={loadMoreRef} className="mt-4 flex w-full items-center justify-center py-4">
               <button
                 onClick={onLoadMore}
                 disabled={isFetchingNextPage}
-                className="mx-auto block rounded-md bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="block rounded-md bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isFetchingNextPage ? "Loading more comments..." : "Load more comments"}
               </button>
