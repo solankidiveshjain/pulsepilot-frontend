@@ -2,7 +2,7 @@
 
 import { CommentPlatform } from "@/lib/types/comments";
 import { cn } from "@/lib/utils";
-import { Instagram, Twitter, Youtube } from "lucide-react";
+import { Instagram, Youtube } from "lucide-react";
 import React from "react";
 
 export interface PlatformPillProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -25,8 +25,6 @@ export function PlatformPill({
         return Youtube;
       case "instagram":
         return Instagram;
-      case "twitter":
-        return Twitter;
       default:
         return Youtube;
     }
@@ -39,8 +37,6 @@ export function PlatformPill({
         return "text-red-500";
       case "instagram":
         return "text-purple-500";
-      case "twitter":
-        return "text-blue-400";
       default:
         return "text-gray-500";
     }
@@ -53,8 +49,6 @@ export function PlatformPill({
         return "YouTube";
       case "instagram":
         return "Instagram";
-      case "twitter":
-        return "X";
       default:
         return platform;
     }
@@ -69,8 +63,7 @@ export function PlatformPill({
         "focus-visible:ring-offset-1 focus:outline-none focus-visible:ring-2",
         className
       )}
-      aria-selected={isSelected}
-      role="checkbox"
+      role="switch"
       aria-checked={isSelected}
       {...props}
     >

@@ -192,11 +192,10 @@ const POSTS = POST_TITLES.map((title, index) => ({
 }));
 
 // Generate a realistic set of comments with diverse attributes
-export function generateComments(count: number, filters?: CommentFilters): Comment[] {
+export function generateComments(count: number): Comment[] {
   const comments: Comment[] = [];
 
   for (let i = 0; i < count; i++) {
-    const commentId = `comment-${Date.now()}-${i}`;
     const postIndex = Math.floor(Math.random() * POSTS.length);
     const postId = POSTS[postIndex].id;
     const platform = POSTS[postIndex].platform;
@@ -210,28 +209,32 @@ export function generateComments(count: number, filters?: CommentFilters): Comme
     const repliesCount = Math.floor(Math.random() * 20);
 
     // Varied status flags with realistic distribution
-    const flagged = Math.random() < 0.15; // 15% of comments are flagged
-    const read = Math.random() < 0.6; // 60% of comments are read
-    const requiresAttention = Math.random() < 0.2; // 20% require attention
-    const archived = Math.random() < 0.1; // 10% are archived
+    const status =
+      Math.random() < 0.15
+        ? "flagged"
+        : Math.random() < 0.6
+          ? "read"
+          : Math.random() < 0.2
+            ? "needs_attention"
+            : "archived";
 
     // Create the comment
     const comment: Comment = {
-      commentId,
-      text: COMMENT_TEXTS[Math.floor(Math.random() * COMMENT_TEXTS.length)],
-      postedAt: timestamp.toISOString(),
-      likes,
-      repliesCount,
-      flagged,
-      requiresAttention,
-      platform,
+      id: `comment-${Date.now()}-${i}`,
+      postId,
+      content: COMMENT_TEXTS[Math.floor(Math.random() * COMMENT_TEXTS.length)],
       author: {
         name: AUTHOR_NAMES[Math.floor(Math.random() * AUTHOR_NAMES.length)],
-        profileImageUrl: `https://randomuser.me/api/portraits/${Math.random() > 0.7 ? "women" : "men"}/${Math.floor(Math.random() * 70)}.jpg`,
+        avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.7 ? "women" : "men"}/${Math.floor(Math.random() * 70)}.jpg`,
       },
-      postId,
-      read,
-      archived,
+      platform,
+      sentiment: Math.random() < 0.6 ? "positive" : Math.random() < 0.8 ? "neutral" : "negative",
+      status,
+      metrics: {
+        likes,
+        replies: repliesCount,
+      },
+      createdAt: timestamp.toISOString(),
     };
 
     comments.push(comment);
@@ -245,7 +248,15 @@ export const fetchComments = async ({
   page = 1,
   filters = {},
 }: { page?: number; filters?: Record<string, string[]> } = {}) => {
-  const response = await fetch(`/api/comments?page=${page}`);
+  const queryParams = new URLSearchParams();
+  queryParams.append("page", page.toString());
+
+  // Add filters to query params
+  Object.entries(filters).forEach(([key, values]) => {
+    values.forEach((value) => queryParams.append(key, value));
+  });
+
+  const response = await fetch(`/api/comments?${queryParams.toString()}`);
   if (!response.ok) {
     throw new Error("Failed to fetch comments");
   }
@@ -308,33 +319,20 @@ export async function fetchCommentsFeed(
 
   // Add filters if provided
   if (filters) {
-    if (filters.platform?.length) {
+    if (filters.platform !== "all") {
       queryParams["platform"] = filters.platform;
     }
 
-    if (filters.flagged !== undefined) {
-      queryParams["flagged"] = filters.flagged;
+    if (filters.sentiment !== "all") {
+      queryParams["sentiment"] = filters.sentiment;
     }
 
-    if (filters.unread !== undefined) {
-      queryParams["unread"] = filters.unread;
-    }
-
-    if (filters.archived !== undefined) {
-      queryParams["archived"] = filters.archived;
-    }
-
-    if (filters.requiresAttention !== undefined) {
-      queryParams["requiresAttention"] = filters.requiresAttention;
+    if (filters.status !== "all") {
+      queryParams["status"] = filters.status;
     }
 
     if (filters.search) {
       queryParams["search"] = filters.search;
-    }
-
-    if (filters.dateRange) {
-      queryParams["startDate"] = filters.dateRange.start;
-      queryParams["endDate"] = filters.dateRange.end;
     }
   }
 
@@ -346,20 +344,18 @@ export async function fetchCommentsFeed(
     let filteredComments = [...mockCommentData];
 
     if (filters) {
-      if (filters.flagged !== undefined) {
-        filteredComments = filteredComments.filter((c) => c.flagged === filters.flagged);
+      if (filters.platform !== "all") {
+        filteredComments = filteredComments.filter((c) => c.platform === filters.platform);
       }
-      if (filters.unread !== undefined) {
-        filteredComments = filteredComments.filter((c) => !c.read === filters.unread);
+
+      if (filters.sentiment !== "all") {
+        filteredComments = filteredComments.filter((c) => c.sentiment === filters.sentiment);
       }
-      if (filters.archived !== undefined) {
-        filteredComments = filteredComments.filter((c) => c.archived === filters.archived);
+
+      if (filters.status !== "all") {
+        filteredComments = filteredComments.filter((c) => c.status === filters.status);
       }
-      if (filters.platform && filters.platform.length > 0) {
-        filteredComments = filteredComments.filter(
-          (c) => filters.platform && filters.platform.includes(c.platform)
-        );
-      }
+
       if (filters.search) {
         const search = filters.search.toLowerCase();
         filteredComments = filteredComments.filter(
@@ -377,8 +373,10 @@ export async function fetchCommentsFeed(
 
     return mockApiResponse<CommentsResponse>({
       comments: paginatedComments,
-      page,
-      nextCursor: hasNextPage ? `mock-cursor-${page + 1}` : undefined,
+      nextCursor:
+        hasNextPage && paginatedComments.length > 0
+          ? paginatedComments[paginatedComments.length - 1].id
+          : null,
     });
   }
 

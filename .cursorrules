@@ -14,7 +14,6 @@
 
 - All spacing, padding, and layout must use Tailwind responsive classes and be handled inside components, not with outer margins or hotfixes
 - All new code must be responsive and tested at mobile and desktop breakpoints
-- Use a 12-column grid for desktop (`max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-[80px]`), and stacked layout for mobile
 - All UI/UX fixes must follow atomic design, marker/Figma spacing, and accessibility standards
 - No hotfixes or dirty workarounds allowed; all changes must be robust, maintainable, and in line with the design system
 

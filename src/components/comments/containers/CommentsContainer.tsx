@@ -1,299 +1,138 @@
-"use client";
+import { useComments } from "@/hooks/useComments";
+import { cn } from "@/lib/utils";
+import type { Comment } from "@/types/comments";
+import React from "react";
+import { CommentDetails } from "../ui/molecules/CommentDetails";
+import { CommentFilters, type FilterOption, type SortOption } from "../ui/molecules/CommentFilters";
+import { CommentList } from "../ui/molecules/CommentList";
 
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { useCallback, useEffect } from "react";
-import { useBulkActions, useCommentMetrics, useCommentsFeed } from "../state/useCommentsFeed";
-import {
-  useActivePost,
-  useFilterSelections,
-  useMobileSidebar,
-  useSelectedComments,
-} from "../state/useCommentsStore";
-import { ContextBar } from "../ui/ContextBar";
-import { FilterSidebar } from "../ui/FilterSidebar";
-import { FilterToolbar } from "../ui/FilterToolbar";
-import { PostDetailsPanel } from "../ui/PostDetailsPanel";
-import { SimpleCommentList } from "../ui/SimpleCommentList";
-import { CommentsLayout } from "./CommentsLayout";
+interface CommentsContainerProps {
+  className?: string;
+}
 
-/**
- * Main container component for the comments interface
- * Handles loading, data fetching, and state management
- */
-export function CommentsContainer() {
-  // Data fetching with React Query
-  const {
-    comments,
-    isLoading,
-    isError,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-    filters,
-    updateFilters,
-    refetch,
-  } = useCommentsFeed();
+export function CommentsContainer({ className }: CommentsContainerProps) {
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedSort, setSelectedSort] = React.useState<SortOption>("newest");
+  const [selectedFilters, setSelectedFilters] = React.useState<FilterOption[]>(["all"]);
+  const [selectedCommentId, setSelectedCommentId] = React.useState<string>();
 
-  // Debug logging
-  useEffect(() => {
-    console.log("CommentsContainer rendered with:", {
-      commentCount: comments.length,
-      isLoading,
-      isError,
-      hasNextPage,
-      filters,
-    });
-  }, [comments, isLoading, isError, hasNextPage, filters]);
+  const { comments = [], isLoading, error, updateStatus } = useComments();
 
-  // Get comment metrics for filter counts
-  const { metrics } = useCommentMetrics();
+  const filteredComments = React.useMemo(() => {
+    let result = [...comments];
 
-  // Get state from Zustand store via selectors
-  const { selectedComments, toggleComment, unselectAll, selectedCount } = useSelectedComments();
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (comment) =>
+          comment.text.toLowerCase().includes(query) ||
+          comment.author.name.toLowerCase().includes(query)
+      );
+    }
 
-  const { activePostId, setActivePostId } = useActivePost();
+    // Apply status and sentiment filters
+    if (selectedFilters.length > 0 && selectedFilters[0] !== "all") {
+      result = result.filter((comment) =>
+        selectedFilters.some((filter) => comment.status === filter || comment.sentiment === filter)
+      );
+    }
 
-  const { isMobileSidebarOpen, setMobileSidebarOpen } = useMobileSidebar();
+    // Apply sorting
+    switch (selectedSort) {
+      case "newest":
+        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case "oldest":
+        result.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        break;
+      case "most-liked":
+        result.sort((a, b) => b.metadata.likes - a.metadata.likes);
+        break;
+      case "most-replied":
+        result.sort((a, b) => b.metadata.replies - a.metadata.replies);
+        break;
+    }
 
-  const {
-    selectedEmotions,
-    selectedSentiments,
-    selectedCategories,
-    setSelectedEmotions,
-    setSelectedSentiments,
-    setSelectedCategories,
-  } = useFilterSelections();
+    return result;
+  }, [comments, searchQuery, selectedFilters, selectedSort]);
 
-  // Bulk actions helper
-  const { performBulkAction } = useBulkActions();
-
-  // Handle view full post
-  const handleViewFullPost = useCallback(
-    (postId: string) => {
-      setActivePostId(postId);
-    },
-    [setActivePostId]
+  const selectedComment = React.useMemo(
+    () => comments.find((c: Comment) => c.id === selectedCommentId),
+    [comments, selectedCommentId]
   );
 
-  // Handle closing post details
-  const handleClosePostDetails = useCallback(() => {
-    setActivePostId(null);
-  }, [setActivePostId]);
+  const handleCommentSelect = React.useCallback((comment: Comment) => {
+    setSelectedCommentId(comment.id);
+  }, []);
 
-  // Load more comments when user reaches the end of the list
-  const handleLoadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const handleReply = React.useCallback(() => {
+    // TODO: Implement reply functionality
+    console.log("Reply to comment:", selectedCommentId);
+  }, [selectedCommentId]);
 
-  // Handle error retry
-  const handleErrorRetry = useCallback(() => {
-    refetch();
-  }, [refetch]);
+  const handleArchive = React.useCallback(() => {
+    if (!selectedCommentId) return;
+    updateStatus({ id: selectedCommentId, status: "archived" });
+  }, [selectedCommentId, updateStatus]);
 
-  // Determine if bulk action toolbar is visible
-  const isBulkToolbarVisible = selectedCount > 0;
+  const handleFlag = React.useCallback(() => {
+    if (!selectedCommentId) return;
+    // TODO: Implement flag functionality
+    console.log("Flag comment:", selectedCommentId);
+  }, [selectedCommentId]);
+
+  const handleResolve = React.useCallback(() => {
+    if (!selectedCommentId) return;
+    updateStatus({ id: selectedCommentId, status: "resolved" });
+  }, [selectedCommentId, updateStatus]);
+
+  if (error) {
+    return (
+      <div className={cn("flex h-full items-center justify-center", className)}>
+        <p className="text-destructive">Error loading comments</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className={cn("flex h-full items-center justify-center", className)}>
+        <p className="text-muted-foreground">Loading comments...</p>
+      </div>
+    );
+  }
 
   return (
-    <CommentsLayout
-      sidebarContent={
-        <ErrorBoundary>
-          <FilterSidebar
-            filters={filters}
-            onFilterChange={updateFilters}
-            metrics={metrics}
-            selectedEmotions={selectedEmotions}
-            selectedSentiments={selectedSentiments}
-            selectedCategories={selectedCategories}
-            selectedCommentIds={selectedComments}
-            onEmotionChange={setSelectedEmotions}
-            onSentimentChange={setSelectedSentiments}
-            onCategoryChange={setSelectedCategories}
-            onCloseMobile={() => setMobileSidebarOpen(false)}
+    <div className={cn("flex h-full flex-col", className)}>
+      <CommentFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedSort={selectedSort}
+        onSortChange={setSelectedSort}
+        selectedFilters={selectedFilters}
+        onFilterChange={setSelectedFilters}
+      />
+      <div className="grid flex-1 grid-cols-1 gap-4 overflow-hidden p-4 lg:grid-cols-2">
+        <div className="h-full overflow-hidden">
+          <CommentList
+            comments={filteredComments}
+            selectedCommentId={selectedCommentId}
+            onCommentSelect={handleCommentSelect}
           />
-        </ErrorBoundary>
-      }
-      rightPanelContent={
-        activePostId && <PostDetailsPanel postId={activePostId} onClose={handleClosePostDetails} />
-      }
-      rightPanelVisible={!!activePostId}
-      isMobileSidebarOpen={isMobileSidebarOpen}
-      onCloseMobileSidebar={() => setMobileSidebarOpen(false)}
-      onOpenMobileSidebar={() => setMobileSidebarOpen(true)}
-    >
-      <div className="flex h-full flex-col">
-        {/* Debug info */}
-        <div className="bg-yellow-100 p-2 text-xs">
-          <p>
-            Debug: {comments.length} comments, Loading: {String(isLoading)}, Error:{" "}
-            {String(isError)}
-          </p>
         </div>
-
-        {/* Header */}
-        <div className="border-b border-border bg-card px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">Comments</h1>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Manage and respond to comments across all your connected platforms
-              </p>
-            </div>
+        {selectedComment && (
+          <div className="h-full overflow-auto">
+            <CommentDetails
+              comment={selectedComment}
+              onReply={handleReply}
+              onArchive={handleArchive}
+              onFlag={handleFlag}
+              onResolve={handleResolve}
+            />
           </div>
-
-          {/* Active Filters Section */}
-          <div className="mt-3">
-            {Object.keys(filters).length > 0 ||
-            selectedEmotions.length > 0 ||
-            selectedSentiments.length > 0 ||
-            selectedCategories.length > 0 ? (
-              <div className="flex items-center border-t border-border pt-3">
-                <div className="mr-4 whitespace-nowrap text-xs font-medium uppercase tracking-wide">
-                  ACTIVE FILTERS:
-                </div>
-                <div className="flex-1 overflow-x-auto pb-1">
-                  <ContextBar
-                    filters={filters}
-                    onClearFilters={() => {
-                      updateFilters({});
-                      setSelectedEmotions([]);
-                      setSelectedSentiments([]);
-                      setSelectedCategories([]);
-                    }}
-                    emotions={selectedEmotions}
-                    sentiments={selectedSentiments}
-                    categories={selectedCategories}
-                  />
-                </div>
-                <button
-                  onClick={() => {
-                    updateFilters({});
-                    setSelectedEmotions([]);
-                    setSelectedSentiments([]);
-                    setSelectedCategories([]);
-                  }}
-                  className="ml-3 rounded border border-gray-200 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-                >
-                  Clear All
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center border-t border-border pt-3">
-                <div className="mr-2 text-xs font-medium uppercase tracking-wide">
-                  No active filters
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Comments list */}
-        <div className="flex-1 p-4">
-          {/* Mobile Filters Toolbar */}
-          <div className="mb-4 lg:hidden">
-            <FilterToolbar filters={filters} onFilterChange={updateFilters} metrics={metrics} />
-          </div>
-
-          {/* Comments List with error boundary */}
-          <ErrorBoundary
-            fallback={
-              <div className="mx-auto max-w-[720px] rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/10">
-                <p className="text-center text-red-700 dark:text-red-400">
-                  Something went wrong loading comments. Please try again.
-                </p>
-                <button
-                  onClick={handleErrorRetry}
-                  className="mx-auto mt-2 block rounded-md bg-primary px-3 py-1 text-sm font-medium text-white"
-                >
-                  Retry
-                </button>
-              </div>
-            }
-          >
-            {isError ? (
-              <div className="mx-auto flex h-40 max-w-[720px] items-center justify-center rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/10">
-                <p className="text-center text-red-600 dark:text-red-400">
-                  Error loading comments. Please try again.
-                </p>
-              </div>
-            ) : (
-              <div className="mx-auto max-w-[720px]">
-                <SimpleCommentList
-                  comments={comments}
-                  isLoading={isLoading}
-                  hasNextPage={hasNextPage}
-                  isFetchingNextPage={isFetchingNextPage}
-                  onLoadMore={handleLoadMore}
-                  selectedCommentIds={selectedComments}
-                  onSelectComment={toggleComment}
-                  onViewFullPost={handleViewFullPost}
-                  className="w-full"
-                />
-              </div>
-            )}
-          </ErrorBoundary>
-        </div>
+        )}
       </div>
-
-      {/* Bulk action toolbar - conditional render at bottom */}
-      {isBulkToolbarVisible && (
-        <div className="sticky bottom-0 border-t border-gray-200 bg-white shadow-lg dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex h-14 items-center justify-between px-4">
-            <div className="flex items-center">
-              <span className="mr-2 rounded-full bg-primary px-2 py-0.5 text-sm font-medium text-white">
-                {selectedCount}
-              </span>
-              <span className="text-sm font-medium">
-                {selectedCount === 1 ? "comment" : "comments"} selected
-              </span>
-              <button
-                onClick={unselectAll}
-                className="ml-3 rounded p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
-                aria-label="Clear selection"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  performBulkAction("mark_read", selectedComments);
-                  unselectAll();
-                }}
-                className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white"
-              >
-                Mark as Read
-              </button>
-              <button
-                onClick={() => {
-                  performBulkAction("archive", selectedComments);
-                  unselectAll();
-                }}
-                className="rounded bg-gray-100 px-3 py-1.5 text-sm font-medium dark:bg-gray-800"
-              >
-                Archive
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </CommentsLayout>
+    </div>
   );
 }

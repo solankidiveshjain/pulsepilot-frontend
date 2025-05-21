@@ -59,8 +59,7 @@ export function EmojiFilterChip({
         "focus-visible:ring-offset-1 ring-gray-400 focus:outline-none focus-visible:ring-2",
         className
       )}
-      aria-selected={isSelected}
-      role="checkbox"
+      role="switch"
       aria-checked={isSelected}
       {...props}
     >

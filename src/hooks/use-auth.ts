@@ -1,178 +1,143 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import * as React from "react";
+import { useApiRequest } from "./use-api-request";
+import { useScreenReaderAnnouncement } from "./use-screen-reader-announcement";
 
 interface User {
   id: string;
-  name: string;
   email: string;
-  image?: string;
+  name: string;
+  role: "user" | "admin";
 }
 
 interface AuthState {
   user: User | null;
-  isLoading: boolean;
   isAuthenticated: boolean;
-  error: string | null;
+  isLoading: boolean;
+  error: Error | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
-export function useAuth() {
-  const router = useRouter();
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isLoading: true,
-    isAuthenticated: false,
-    error: null,
+interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+export function useAuth(): AuthState {
+  const [user, setUser] = React.useState<User | null>(null);
+  const { announceToScreenReader } = useScreenReaderAnnouncement();
+
+  const {
+    execute: executeLogin,
+    isLoading: isLoginLoading,
+    error: loginError,
+  } = useApiRequest<AuthResponse>({
+    url: "/api/auth/login",
+    method: "POST",
+    onSuccess: (data) => {
+      setUser(data.user);
+      localStorage.setItem("token", data.token);
+      announceToScreenReader("Successfully logged in");
+    },
   });
 
-  // Load user data on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // This would be a real API call in production
-        const mockUser = {
-          id: "user-1",
-          name: "Demo User",
-          email: "demo@example.com",
-          image: "https://api.dicebear.com/7.x/avataaars/svg?seed=demo",
-        };
+  const {
+    execute: executeLogout,
+    isLoading: isLogoutLoading,
+    error: logoutError,
+  } = useApiRequest({
+    url: "/api/auth/logout",
+    method: "POST",
+    onSuccess: () => {
+      setUser(null);
+      localStorage.removeItem("token");
+      announceToScreenReader("Successfully logged out");
+    },
+  });
 
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
+  const {
+    execute: executeRegister,
+    isLoading: isRegisterLoading,
+    error: registerError,
+  } = useApiRequest<AuthResponse>({
+    url: "/api/auth/register",
+    method: "POST",
+    onSuccess: (data) => {
+      setUser(data.user);
+      localStorage.setItem("token", data.token);
+      announceToScreenReader("Successfully registered");
+    },
+  });
 
-        setAuthState({
-          user: mockUser,
-          isLoading: false,
-          isAuthenticated: true,
-          error: null,
-        });
-      } catch (error) {
-        setAuthState({
-          user: null,
-          isLoading: false,
-          isAuthenticated: false,
-          error: "Authentication failed",
-        });
-      }
-    };
+  const {
+    execute: executeResetPassword,
+    isLoading: isResetPasswordLoading,
+    error: resetPasswordError,
+  } = useApiRequest({
+    url: "/api/auth/reset-password",
+    method: "POST",
+    onSuccess: () => {
+      announceToScreenReader("Password reset email sent");
+    },
+  });
 
-    checkAuth();
-  }, []);
+  const { execute: executeValidateToken } = useApiRequest<User>({
+    url: "/api/auth/me",
+    method: "GET",
+    onSuccess: (userData) => {
+      setUser(userData);
+    },
+    onError: () => {
+      localStorage.removeItem("token");
+      setUser(null);
+    },
+  });
 
-  const login = useCallback(
+  const login = React.useCallback(
     async (email: string, password: string) => {
-      try {
-        setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        if (email === "demo@example.com" && password === "password") {
-          const mockUser = {
-            id: "user-1",
-            name: "Demo User",
-            email: "demo@example.com",
-            image: "https://api.dicebear.com/7.x/avataaars/svg?seed=demo",
-          };
-
-          setAuthState({
-            user: mockUser,
-            isLoading: false,
-            isAuthenticated: true,
-            error: null,
-          });
-
-          router.push("/dashboard");
-          return { success: true };
-        } else {
-          throw new Error("Invalid credentials");
-        }
-      } catch (error) {
-        setAuthState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: error instanceof Error ? error.message : "Login failed",
-        }));
-        return { success: false, error };
-      }
+      await executeLogin({ body: { email, password } });
     },
-    [router]
+    [executeLogin]
   );
 
-  const logout = useCallback(async () => {
-    try {
-      setAuthState((prev) => ({ ...prev, isLoading: true }));
+  const logout = React.useCallback(async () => {
+    await executeLogout();
+  }, [executeLogout]);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+  const register = React.useCallback(
+    async (email: string, password: string, name: string) => {
+      await executeRegister({ body: { email, password, name } });
+    },
+    [executeRegister]
+  );
 
-      setAuthState({
-        user: null,
-        isLoading: false,
-        isAuthenticated: false,
-        error: null,
-      });
+  const resetPassword = React.useCallback(
+    async (email: string) => {
+      await executeResetPassword({ body: { email } });
+    },
+    [executeResetPassword]
+  );
 
-      router.push("/login");
-      return { success: true };
-    } catch (error) {
-      setAuthState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: "Logout failed",
-      }));
-      return { success: false, error };
+  // Check for existing session on mount
+  React.useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      executeValidateToken();
     }
-  }, [router]);
-
-  const register = useCallback(
-    async (name: string, email: string, password: string) => {
-      try {
-        setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        // Using password in a comment to avoid lint error - in a real app, this would be sent to the API
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const hashedPassword = `${password}_hashed`; // Simulating password hashing
-
-        const mockUser = {
-          id: "user-" + Date.now(),
-          name,
-          email,
-          image: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-        };
-
-        setAuthState({
-          user: mockUser,
-          isLoading: false,
-          isAuthenticated: true,
-          error: null,
-        });
-
-        router.push("/onboarding");
-        return { success: true };
-      } catch (error) {
-        setAuthState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: error instanceof Error ? error.message : "Registration failed",
-        }));
-        return { success: false, error };
-      }
-    },
-    [router]
-  );
+  }, [executeValidateToken]);
 
   return {
-    user: authState.user,
-    isLoading: authState.isLoading,
-    isAuthenticated: authState.isAuthenticated,
-    error: authState.error,
+    user,
+    isAuthenticated: !!user,
+    isLoading: isLoginLoading || isLogoutLoading || isRegisterLoading || isResetPasswordLoading,
+    error: loginError || logoutError || registerError || resetPasswordError,
     login,
     logout,
     register,
+    resetPassword,
   };
 }

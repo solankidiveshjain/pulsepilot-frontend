@@ -1,182 +1,118 @@
-import { CommentFilters } from "@/lib/types/comments";
+import type { Comment, CommentFilters, Post } from "@/types/comments";
 import { create } from "zustand";
-import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
-import { CommentModel } from "./CommentModels";
+import { devtools } from "zustand/middleware";
 
-export interface CommentsState {
-  // Core data
-  comments: CommentModel[];
-  isLoading: boolean;
-  hasNextPage: boolean;
-  error: Error | null;
-
-  // Filters
+interface CommentsState {
+  // Data
+  comments: Comment[];
+  selectedComment: Comment | null;
+  selectedPost: Post | null;
   filters: CommentFilters;
 
-  // Selection
-  selectedIds: Set<string>;
-  expandedThreadIds: Set<string>;
+  // UI State
+  isPreviewOpen: boolean;
+  isSidebarOpen: boolean;
 
-  // Actions - Data
-  setComments: (comments: CommentModel[]) => void;
-  updateComments: (comments: CommentModel[]) => void;
-  addComments: (comments: CommentModel[]) => void;
-  setLoading: (isLoading: boolean) => void;
-  setHasNextPage: (hasNextPage: boolean) => void;
-  setError: (error: Error | null) => void;
+  // Actions
+  setComments: (comments: Comment[]) => void;
+  setSelectedComment: (comment: Comment | null) => void;
+  setSelectedPost: (post: Post | null) => void;
+  setFilters: (filters: Partial<CommentFilters>) => void;
+  setPreviewOpen: (isOpen: boolean) => void;
+  setSidebarOpen: (isOpen: boolean) => void;
 
-  // Actions - Filters
-  updateFilters: (filters: Partial<CommentFilters>) => void;
-  clearFilters: () => void;
-
-  // Actions - Selection
-  toggleSelection: (id: string) => void;
-  clearSelection: () => void;
-  selectMultiple: (ids: string[]) => void;
-
-  // Actions - Thread expansion
-  toggleThreadExpansion: (id: string) => void;
-  closeAllThreads: () => void;
-
-  // Derived state
-  getSelectedComments: () => CommentModel[];
-  getFilteredComments: () => CommentModel[];
+  // Selectors
+  filteredComments: Comment[];
+  hasActiveFilters: boolean;
 }
 
-// Define the shape of what we're storing in localStorage
-interface PersistedState {
-  filters?: CommentFilters;
-  expandedThreadIds?: string[];
-}
+const initialFilters: CommentFilters = {
+  search: "",
+  status: "all",
+  platforms: [],
+  emotions: [],
+  sentiments: [],
+  categories: [],
+};
 
 export const useCommentsStore = create<CommentsState>()(
-  persist(
-    subscribeWithSelector(
-      devtools(
-        (set, get) => ({
-          // Initial state
-          comments: [],
-          isLoading: false,
-          hasNextPage: false,
-          error: null,
-          filters: {},
-          selectedIds: new Set<string>(),
-          expandedThreadIds: new Set<string>(),
+  devtools(
+    (set, get) => ({
+      // Initial State
+      comments: [],
+      selectedComment: null,
+      selectedPost: null,
+      filters: initialFilters,
+      isPreviewOpen: false,
+      isSidebarOpen: false,
 
-          // Actions - Data
-          setComments: (rawComments) => {
-            const comments = rawComments.map((c) => new CommentModel(c));
-            set({ comments });
-          },
+      // Actions
+      setComments: (comments) => set({ comments }),
+      setSelectedComment: (comment) => set({ selectedComment: comment }),
+      setSelectedPost: (post) => set({ selectedPost: post }),
+      setFilters: (newFilters) =>
+        set((state) => ({
+          filters: { ...state.filters, ...newFilters },
+        })),
+      setPreviewOpen: (isOpen) => set({ isPreviewOpen: isOpen }),
+      setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
 
-          updateComments: (rawComments) => {
-            const comments = rawComments.map((c) => new CommentModel(c));
-            set({ comments });
-          },
+      // Selectors
+      get filteredComments() {
+        const { comments, filters } = get();
 
-          addComments: (rawComments) => {
-            const newComments = rawComments.map((c) => new CommentModel(c));
-            set((state) => ({
-              comments: [...state.comments, ...newComments],
-            }));
-          },
+        return comments.filter((comment) => {
+          // Search filter
+          if (
+            filters.search &&
+            !comment.text.toLowerCase().includes(filters.search.toLowerCase())
+          ) {
+            return false;
+          }
 
-          setLoading: (isLoading) => set({ isLoading }),
-          setHasNextPage: (hasNextPage) => set({ hasNextPage }),
-          setError: (error) => set({ error }),
+          // Status filter
+          if (filters.status !== "all" && comment.status !== filters.status) {
+            return false;
+          }
 
-          // Actions - Filters
-          updateFilters: (newFilters) => {
-            set((state) => ({
-              filters: { ...state.filters, ...newFilters },
-            }));
-          },
+          // Platform filter
+          if (filters.platforms.length > 0 && !filters.platforms.includes(comment.platform)) {
+            return false;
+          }
 
-          clearFilters: () => set({ filters: {} }),
+          // Emotion filter
+          if (filters.emotions.length > 0 && !filters.emotions.includes(comment.emotion)) {
+            return false;
+          }
 
-          // Actions - Selection
-          toggleSelection: (id) => {
-            set((state) => {
-              const newSelectedIds = new Set(state.selectedIds);
-              if (newSelectedIds.has(id)) {
-                newSelectedIds.delete(id);
-              } else {
-                newSelectedIds.add(id);
-              }
-              return { selectedIds: newSelectedIds };
-            });
-          },
+          // Sentiment filter
+          if (filters.sentiments.length > 0 && !filters.sentiments.includes(comment.sentiment)) {
+            return false;
+          }
 
-          clearSelection: () => set({ selectedIds: new Set() }),
+          // Category filter
+          if (filters.categories.length > 0 && !filters.categories.includes(comment.category)) {
+            return false;
+          }
 
-          selectMultiple: (ids) => {
-            set((state) => {
-              const newSelectedIds = new Set(state.selectedIds);
-              ids.forEach((id) => newSelectedIds.add(id));
-              return { selectedIds: newSelectedIds };
-            });
-          },
-
-          // Actions - Thread expansion
-          toggleThreadExpansion: (id) => {
-            set((state) => {
-              const newExpandedThreadIds = new Set(state.expandedThreadIds);
-              if (newExpandedThreadIds.has(id)) {
-                newExpandedThreadIds.delete(id);
-              } else {
-                newExpandedThreadIds.add(id);
-              }
-              return { expandedThreadIds: newExpandedThreadIds };
-            });
-          },
-
-          closeAllThreads: () => set({ expandedThreadIds: new Set() }),
-
-          // Derived state
-          getSelectedComments: () => {
-            const { comments, selectedIds } = get();
-            return comments.filter((comment) => selectedIds.has(comment.id));
-          },
-
-          getFilteredComments: () => {
-            const { comments, filters } = get();
-            return comments.filter((comment) => comment.matchesFilters(filters));
-          },
-        }),
-        { name: "comments-store" }
-      )
-    ),
-    {
-      name: "pulsepilot-comments-storage",
-      partialize: (state) => ({
-        // Only persist filters and expanded thread IDs, not data or selection
-        filters: state.filters,
-        expandedThreadIds: Array.from(state.expandedThreadIds),
-      }),
-      // Custom storage serialization to handle Set objects
-      merge: (persisted: unknown, current) => {
-        const persistedState = persisted as PersistedState;
-        return {
-          ...current,
-          filters: persistedState?.filters || {},
-          expandedThreadIds: persistedState?.expandedThreadIds
-            ? new Set(persistedState.expandedThreadIds)
-            : new Set(),
-        };
+          return true;
+        });
       },
+
+      get hasActiveFilters() {
+        const { filters } = get();
+        return (
+          filters.search !== "" ||
+          filters.status !== "all" ||
+          filters.platforms.length > 0 ||
+          filters.emotions.length > 0 ||
+          filters.sentiments.length > 0 ||
+          filters.categories.length > 0
+        );
+      },
+    }),
+    {
+      name: "comments-store",
     }
   )
 );
-
-// Create custom selectors for fine-grained subscriptions
-export const selectFilteredComments = (state: CommentsState) => state.getFilteredComments();
-export const selectSelectedComments = (state: CommentsState) => state.getSelectedComments();
-export const selectSelectedCount = (state: CommentsState) => state.selectedIds.size;
-export const selectComments = (state: CommentsState) => state.comments || [];
-export const selectFilters = (state: CommentsState) => state.filters;
-export const selectIsLoading = (state: CommentsState) => state.isLoading;
-export const selectHasNextPage = (state: CommentsState) => state.hasNextPage;
-export const selectIsCommentSelected = (state: CommentsState, id: string) =>
-  state.selectedIds.has(id);
-export const selectIsThreadExpanded = (state: CommentsState, id: string) =>
-  state.expandedThreadIds.has(id);

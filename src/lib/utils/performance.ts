@@ -7,7 +7,7 @@ import React from "react";
 /**
  * Debounce function to limit how often a function can be called
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -29,7 +29,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function to limit how often a function can be called
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -49,14 +49,12 @@ export function throttle<T extends (...args: any[]) => any>(
 /**
  * Creates a lazy-loaded component with loading fallback
  */
-export function lazyWithPreload<T extends React.ComponentType<any>>(
+export function lazyWithPreload<T extends React.ComponentType<unknown>>(
   factory: () => Promise<{ default: T }>
 ) {
   const Component = React.lazy(factory);
   let factoryPromise: Promise<{ default: T }> | null = null;
-  let LoadedComponent: { default: T } | null = null;
 
-  // Simplified component to avoid JSX parsing issues
   const LazyComponent = (props: React.ComponentProps<T>) => {
     return React.createElement(
       React.Suspense,
@@ -72,9 +70,6 @@ export function lazyWithPreload<T extends React.ComponentType<any>>(
   LazyComponent.preload = () => {
     if (!factoryPromise) {
       factoryPromise = factory();
-      factoryPromise.then((module) => {
-        LoadedComponent = module;
-      });
     }
     return factoryPromise;
   };
@@ -105,8 +100,3 @@ export function useIntersectionObserver(
 
   return entry;
 }
-
-/**
- * Import React at the top - adding here for completeness
- */
-const commentForLinter = "This is needed for the React import";
