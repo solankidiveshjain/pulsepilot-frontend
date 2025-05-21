@@ -13,7 +13,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-background font-sans antialiased", inter.className)}>
+      <body className={cn("min-h-screen bg-gray-100", inter.className)}>
+        <div className="m-4 rounded-lg bg-blue-500 p-4 text-white shadow-lg">
+          IF YOU SEE THIS BLUE BOX WITH SHADOW, TAILWIND WORKS!
+        </div>
         <RootProvider>{children}</RootProvider>
       </body>
     </html>
