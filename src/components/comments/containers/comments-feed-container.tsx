@@ -1,0 +1,288 @@
+"use client"
+
+import type React from "react"
+
+import { useCallback, useRef, useState, useEffect } from "react"
+import { FixedSizeList as List } from "react-window"
+import InfiniteLoader from "react-window-infinite-loader"
+import AutoSizer from "react-virtualized-auto-sizer"
+import { CommentCard } from "@/components/comments/ui/comment-card"
+import { CommentReplies } from "@/components/comments/ui/comment-replies"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ErrorBoundary } from "@/components/ui/error-boundary"
+import { useCommentsStore, useCommentsActions } from "@/components/comments/state/comments-store"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { useToast } from "@/hooks/use-toast"
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
+import { Search, X } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+
+export default function CommentsFeedContainer() {
+  const comments = useCommentsStore((state) => state.filteredComments)
+  const selectedComment = useCommentsStore((state) => state.selectedComment)
+  const selectedComments = useCommentsStore((state) => state.selectedComments)
+  const expandedComments = useCommentsStore((state) => state.expandedComments)
+  const expandedReplies = useCommentsStore((state) => state.expandedReplies)
+  const isLoading = useCommentsStore((state) => state.isLoading)
+  const filters = useCommentsStore((state) => state.filters)
+
+  const {
+    setSelectedComment,
+    toggleExpandComment,
+    toggleExpandReply,
+    toggleCommentSelection,
+    archiveComments,
+    flagComment,
+    markCommentAsImportant,
+    deleteComment,
+    saveCommentForLater,
+    updateFilters,
+  } = useCommentsActions()
+
+  const [searchValue, setSearchValue] = useState(filters.search || "")
+  const isMobile = useIsMobile()
+  const { toast } = useToast()
+  const listRef = useRef<List>(null)
+
+  // Handle keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      keys: { key: "ArrowDown" },
+      handler: () => {
+        if (!comments.length) return
+        const currentIndex = selectedComment ? comments.findIndex((c) => c.id === selectedComment.id) : -1
+        const nextIndex = currentIndex < comments.length - 1 ? currentIndex + 1 : 0
+        setSelectedComment(comments[nextIndex])
+
+        // Scroll to the selected comment
+        if (listRef.current) {
+          listRef.current.scrollToItem(nextIndex, "center")
+        }
+      },
+    },
+    {
+      keys: { key: "ArrowUp" },
+      handler: () => {
+        if (!comments.length) return
+        const currentIndex = selectedComment ? comments.findIndex((c) => c.id === selectedComment.id) : -1
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : comments.length - 1
+        setSelectedComment(comments[prevIndex])
+
+        // Scroll to the selected comment
+        if (listRef.current) {
+          listRef.current.scrollToItem(prevIndex, "center")
+        }
+      },
+    },
+  ])
+
+  // Handle comment actions
+  const handleCommentAction = useCallback(
+    (action: string, commentId: string) => {
+      const actionMessages = {
+        flag: "Comment flagged for review",
+        archive: "Comment archived",
+        save: "Comment saved for later",
+        delete: "Comment deleted",
+        important: "Comment marked as important",
+      }
+
+      switch (action) {
+        case "flag":
+          flagComment(commentId, true)
+          break
+        case "archive":
+          archiveComments([commentId])
+          break
+        case "save":
+          saveCommentForLater(commentId)
+          break
+        case "delete":
+          deleteComment(commentId)
+          break
+        case "important":
+          markCommentAsImportant(commentId)
+          break
+      }
+
+      toast({
+        title: actionMessages[action as keyof typeof actionMessages] || "Action completed",
+        description: `Comment ID: ${commentId.substring(0, 8)}...`,
+      })
+    },
+    [flagComment, archiveComments, saveCommentForLater, deleteComment, markCommentAsImportant, toast],
+  )
+
+  // Handle reply to comment
+  const handleReply = useCallback(
+    (comment) => {
+      // In a real app, this would open a reply dialog
+      toast({
+        title: "Reply Dialog",
+        description: `Replying to ${comment.author.name}`,
+      })
+    },
+    [toast],
+  )
+
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    updateFilters({ search: searchValue })
+  }
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchValue("")
+    updateFilters({ search: "" })
+  }
+
+  // Scroll to selected comment when it changes
+  useEffect(() => {
+    if (selectedComment && listRef.current) {
+      const index = comments.findIndex((c) => c.id === selectedComment.id)
+      if (index !== -1) {
+        listRef.current.scrollToItem(index, "center")
+      }
+    }
+  }, [selectedComment, comments])
+
+  // Handle infinite loading
+  const isItemLoaded = (index: number) => index < comments.length
+  const loadMoreItems = (startIndex: number, stopIndex: number) => {
+    // In a real app, this would load more comments from an API
+    return Promise.resolve()
+  }
+
+  if (comments.length === 0 && !isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <svg
+          className="h-16 w-16 text-muted-foreground mb-4 opacity-50"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+          />
+        </svg>
+        <h3 className="text-xl font-medium">No comments found</h3>
+        <p className="text-muted-foreground">Try adjusting your filters to see more results</p>
+      </div>
+    )
+  }
+
+  // Row renderer for virtualized list
+  const rowRenderer = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const comment = comments[index]
+    if (!comment) return null
+
+    const isSelected = selectedComment?.id === comment.id
+    const isChecked = selectedComments.includes(comment.id)
+    const isExpanded = expandedComments.includes(comment.id)
+    const isRepliesExpanded = expandedReplies.includes(comment.id)
+
+    return (
+      <div style={style} className="px-2 py-1">
+        <div className="comment-thread">
+          <CommentCard
+            comment={comment}
+            isSelected={isSelected}
+            isChecked={isChecked}
+            isExpanded={isExpanded}
+            isRepliesExpanded={isRepliesExpanded}
+            onSelect={() => setSelectedComment(comment)}
+            onReply={() => handleReply(comment)}
+            onToggleSelect={() => toggleCommentSelection(comment.id)}
+            onToggleExpand={() => toggleExpandComment(comment.id)}
+            onToggleReplies={(e) => {
+              e.stopPropagation()
+              toggleExpandReply(comment.id)
+            }}
+            onAction={(action) => handleCommentAction(action, comment.id)}
+            isMobile={isMobile}
+          />
+
+          {/* Expanded Replies */}
+          {isRepliesExpanded && (
+            <div className="replies-container ml-8 pl-3 border-l-2 border-primary/20 dark:border-primary/30 mt-1 mb-1.5">
+              <CommentReplies commentId={comment.id} />
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <ErrorBoundary>
+      <div className="flex flex-col h-full">
+        {/* Search Bar */}
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border/30 p-2">
+          <form onSubmit={handleSearch} className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search comments..."
+              className="pl-8 pr-8 h-8 bg-background border-border/60 text-xs"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+            {searchValue && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                onClick={clearSearch}
+              >
+                <X className="h-3 w-3" />
+                <span className="sr-only">Clear search</span>
+              </Button>
+            )}
+          </form>
+        </div>
+
+        {/* Virtualized List */}
+        <div className="flex-1">
+          <AutoSizer>
+            {({ height, width }) => (
+              <InfiniteLoader
+                isItemLoaded={isItemLoaded}
+                itemCount={comments.length + (isLoading ? 1 : 0)}
+                loadMoreItems={loadMoreItems}
+              >
+                {({ onItemsRendered, ref }) => (
+                  <List
+                    ref={(list) => {
+                      ref(list)
+                      listRef.current = list
+                    }}
+                    height={height}
+                    width={width}
+                    itemCount={comments.length}
+                    itemSize={120} // Adjust based on your comment card size
+                    onItemsRendered={onItemsRendered}
+                  >
+                    {rowRenderer}
+                  </List>
+                )}
+              </InfiniteLoader>
+            )}
+          </AutoSizer>
+        </div>
+
+        {isLoading && (
+          <div className="flex justify-center py-4">
+            <LoadingSpinner size="md" />
+          </div>
+        )}
+      </div>
+    </ErrorBoundary>
+  )
+}

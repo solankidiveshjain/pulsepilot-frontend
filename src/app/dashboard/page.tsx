@@ -1,60 +1,114 @@
-"use client";
+"use client"
 
-import { CommentContainer } from "@/components/comments/containers/CommentContainer";
-import { Button } from "@/components/ui/button";
-import { Instagram, MessageSquare, Play, Youtube } from "lucide-react";
+import { useState } from "react"
+import dynamic from "next/dynamic"
+import { TopNavigation } from "@/components/dashboard/top-navigation"
+import { DashboardSidebar } from "@/components/dashboard/sidebar"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Filter, X } from "lucide-react"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { ErrorBoundary } from "@/components/ui/error-boundary"
+import { useCommentsStore } from "@/components/comments/state/comments-store"
+import { KeyboardShortcutsGuide } from "@/components/keyboard-shortcuts-guide"
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
+
+// Dynamically import components for better performance
+const CommentsFeedContainer = dynamic(
+  () => import("@/components/comments/containers/comments-feed-container").then((mod) => mod.CommentsFeedContainer),
+  { ssr: false },
+)
+
+const PostPreview = dynamic(() => import("@/components/dashboard/post-preview").then((mod) => mod.PostPreview), {
+  ssr: false,
+})
 
 export default function DashboardPage() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
+  const selectedPost = useCommentsStore((state) => state.selectedPost)
+  const isPreviewOpen = useCommentsStore((state) => state.isPreviewOpen)
+  const setIsPreviewOpen = useCommentsStore((state) => state.setIsPreviewOpen)
+
+  const isMobile = useIsMobile()
+
+  const handleClosePostPreview = () => {
+    setIsPreviewOpen(false)
+  }
+
+  // Set up keyboard shortcut to open shortcuts guide
+  useKeyboardShortcuts([
+    {
+      keys: { key: "?" },
+      handler: () => setIsShortcutsOpen(true),
+    },
+  ])
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-brand-primary" />
-            <span className="text-xl font-bold text-brand-primary">PulsePilot</span>
+    <ErrorBoundary>
+      <TopNavigation />
+      <div className="h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-background to-secondary/30">
+        <div className="flex h-full max-w-screen-2xl mx-auto">
+          {/* Filters Sidebar - Desktop */}
+          {!isMobile && (
+            <div className="w-64 border-r border-border/30 overflow-hidden">
+              <DashboardSidebar />
+            </div>
+          )}
+
+          {/* Filters Sidebar - Mobile */}
+          {isMobile && (
+            <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+              <SheetTrigger asChild className="absolute left-4 top-20 z-10">
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0 md:hidden">
+                  <Filter className="h-4 w-4" />
+                  <span className="sr-only">Filters</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[80%] p-0 pt-8">
+                <DashboardSidebar />
+              </SheetContent>
+            </Sheet>
+          )}
+
+          {/* Main Comment Feed - Responsive width */}
+          <div
+            className={`flex-1 overflow-hidden border-r border-border/30 ${isPreviewOpen && !isMobile ? "w-[60%]" : "w-full"}`}
+          >
+            {/* Keyboard Shortcuts Button */}
+            <div className="absolute right-4 top-20 z-10">
+              <KeyboardShortcutsGuide />
+            </div>
+
+            <CommentsFeedContainer />
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost">Settings</Button>
-            <Button variant="ghost">Help</Button>
-          </div>
+
+          {/* Post Preview Panel - Desktop */}
+          {!isMobile && isPreviewOpen && (
+            <div className="w-[40%] relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-2 h-6 w-6 p-0 z-10"
+                onClick={handleClosePostPreview}
+              >
+                <X className="h-3.5 w-3.5" />
+                <span className="sr-only">Close preview</span>
+              </Button>
+              <PostPreview post={selectedPost} />
+            </div>
+          )}
+
+          {/* Post Preview Panel - Mobile (as a Sheet) */}
+          {isMobile && (
+            <Sheet open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+              <SheetContent side="right" className="w-[90%] p-0 pt-8">
+                <PostPreview post={selectedPost} />
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col md:flex-row">
-        {/* Sidebar */}
-        <aside className="w-full space-y-2 border-r bg-muted/40 p-4 md:w-64">
-          <Button variant="ghost" className="w-full justify-start gap-2">
-            <Youtube className="h-4 w-4 text-red-500" />
-            YouTube
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2">
-            <Instagram className="h-4 w-4 text-pink-500" />
-            Instagram
-          </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2">
-            <Play className="h-4 w-4 text-green-600" />
-            Play Store
-          </Button>
-        </aside>
-
-        {/* Dashboard Content */}
-        <main className="flex-1 bg-background p-4 md:p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Comments Dashboard</h1>
-            <p className="text-muted-foreground">
-              Monitor and manage comments across your social media platforms
-            </p>
-          </div>
-
-          <div className="grid gap-6">
-            <CommentContainer postId="youtube-post-1" title="YouTube Comments" />
-            <CommentContainer postId="instagram-post-1" title="Instagram Comments" />
-            <CommentContainer postId="playstore-post-1" title="Play Store Reviews" />
-          </div>
-        </main>
       </div>
-    </div>
-  );
+    </ErrorBoundary>
+  )
 }
