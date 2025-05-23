@@ -1,4 +1,4 @@
-import type { Comment, CommentReply, Platform, Post } from "@/types"
+import type { Comment, CommentReply, Platform, Post, Profile } from "@/types"
 
 // Mock posts data
 export const mockPosts: Post[] = [
@@ -515,3 +515,14 @@ export const categoryFilters = [
   { id: "spam", label: "Spam", icon: "🚫", color: "red-500", count: 1 },
   { id: "general", label: "General", icon: "📦", color: "gray-500", count: 5 },
 ]
+
+// Mock user profile
+export const mockProfile: Profile = {
+  id: 'mock-user-1',
+  teamId: 'mock-team',
+  userName: 'Mock User',
+  email: 'mock@pulsepilot.com',
+  avatarUrl: '/placeholder.svg?height=80&width=80',
+  roles: ['admin'],
+  settings: {},
+}

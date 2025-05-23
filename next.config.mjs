@@ -4,7 +4,6 @@ const require = createRequire(import.meta.url);
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -23,6 +22,7 @@ const nextConfig = {
       },
     ],
   },
+  serverExternalPackages: [],
   experimental: {
     optimizeCss: true,
     optimizePackageImports: [
@@ -31,7 +31,6 @@ const nextConfig = {
       'date-fns',
       'framer-motion',
     ],
-    serverComponentsExternalPackages: [],
     serverActions: {
       bodySizeLimit: '2mb',
     },

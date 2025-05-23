@@ -163,3 +163,34 @@ Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of cond
 ## License
 
 This project is proprietary software owned by PulsePilot, Inc.
+
+## Mock Server Setup
+
+To run the frontend against a realistic mock backend, follow these steps:
+
+1. Generate the mock database JSON (seeded with posts, comments, replies, profile, filters):
+
+   ```bash
+   npm run gen:mock
+   ```
+
+2. Start the JSON Server on port 4000:
+
+   ```bash
+   npm run mock:server
+   ```
+
+3. In a separate shell, create or update `.env.local` at project root:
+
+   ```bash
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+   NEXT_PUBLIC_USE_MOCK=true
+   ```
+
+4. Start the Next.js dev server (which now points at your mock server):
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open your browser at [http://localhost:3000](http://localhost:3000) to see the app using mock data.
