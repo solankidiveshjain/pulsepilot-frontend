@@ -47,7 +47,7 @@ export function ActionBiasSelector({ value, onChange, className }: ActionBiasSel
         >
           <div
             className={cn(
-              "mt-0.5 flex-shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center",
+              "mt-0.5 shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center",
               value === option.value ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground",
             )}
           >

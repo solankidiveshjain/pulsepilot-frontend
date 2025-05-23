@@ -63,7 +63,7 @@ export default function LandingPage() {
       >
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
+            <div className="h-9 w-9 rounded-xl bg-linear-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
               <span className="text-primary-foreground font-bold text-lg">P</span>
             </div>
             <span className="font-bold text-xl">
@@ -91,7 +91,7 @@ export default function LandingPage() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden py-20 md:py-32">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/10 -z-10" />
+          <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-secondary/10 -z-10" />
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl -z-10" />
           <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-secondary/10 rounded-full blur-3xl -z-10" />
 
@@ -145,7 +145,7 @@ export default function LandingPage() {
                 className="relative"
               >
                 <div className="relative z-10 bg-background rounded-xl shadow-2xl border border-border/40 overflow-hidden">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary" />
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-primary to-secondary" />
                   <div className="p-1">
                     <div className="rounded-lg overflow-hidden">
                       <Image
@@ -576,7 +576,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
             <div className="col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
+                <div className="h-8 w-8 rounded-xl bg-linear-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
                   <span className="text-primary-foreground font-bold text-sm">P</span>
                 </div>
                 <span className="font-bold text-lg">

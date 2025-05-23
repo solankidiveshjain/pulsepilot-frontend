@@ -28,13 +28,13 @@ function CommentRepliesComponent({ commentId }: CommentRepliesProps) {
   if (loading) {
     return (
       <div className="pl-8 space-y-1.5 animate-pulse">
-        <div className="h-10 bg-gradient-to-r from-primary/10 to-primary/5 rounded-md shimmer-effect"></div>
+        <div className="h-10 bg-linear-to-r from-primary/10 to-primary/5 rounded-md shimmer-effect"></div>
         <div
-          className="h-10 bg-gradient-to-r from-primary/10 to-primary/5 rounded-md shimmer-effect"
+          className="h-10 bg-linear-to-r from-primary/10 to-primary/5 rounded-md shimmer-effect"
           style={{ animationDelay: "0.2s" }}
         ></div>
         <div
-          className="h-10 bg-gradient-to-r from-primary/10 to-primary/5 rounded-md shimmer-effect"
+          className="h-10 bg-linear-to-r from-primary/10 to-primary/5 rounded-md shimmer-effect"
           style={{ animationDelay: "0.4s" }}
         ></div>
       </div>
@@ -61,7 +61,7 @@ function CommentRepliesComponent({ commentId }: CommentRepliesProps) {
       {replies.map((reply, index) => (
         <Card
           key={reply.id}
-          className={`border-border/40 shadow-sm bg-gradient-to-r animate-gradient-x ${gradientColors[index % gradientColors.length]}`}
+          className={`border-border/40 shadow-sm bg-linear-to-r animate-gradient-x ${gradientColors[index % gradientColors.length]}`}
           style={{ animationDelay: `${index * 0.1}s` }}
         >
           <CardContent className="p-2">

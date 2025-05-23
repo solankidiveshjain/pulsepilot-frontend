@@ -104,8 +104,8 @@ export default function DashboardPage() {
   return (
     <>
       <TopNavigation />
-      <div className="h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-background to-secondary/30">
-        <div className="flex h-full max-w-screen-2xl mx-auto">
+      <div className="h-[calc(100vh-4rem)] overflow-hidden bg-linear-to-br from-background to-secondary/30">
+        <div className="flex h-full max-w-[theme(screens.2xl)] mx-auto">
           {/* Filters Sidebar - Desktop */}
           {!isMobile && (
             <div className="w-64 border-r border-border/30 overflow-hidden">

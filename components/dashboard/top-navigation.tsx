@@ -34,7 +34,7 @@ export function TopNavigation() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
+            <div className="h-9 w-9 rounded-xl bg-linear-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
               <span className="text-primary-foreground font-bold text-lg">P</span>
             </div>
             <span className="font-bold text-xl">

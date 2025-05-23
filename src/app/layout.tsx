@@ -27,7 +27,7 @@ export default function RootLayout({
           disableTransitionOnChange
           enableColorScheme={false}
         >
-          <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/30">
+          <div className="min-h-screen flex flex-col bg-linear-to-br from-background to-secondary/30">
             {children}
           </div>
         </ThemeProvider>
