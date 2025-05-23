@@ -1,17 +1,17 @@
 "use client"
 
-import type React from "react"
-import { memo } from "react"
-import Image from "next/image"
-import { Zap, ThumbsUp, MessageSquare, ChevronDown, ChevronUp, ChevronRight, Reply } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { Comment, Platform } from "@/types"
+import { emotionInfo, platformInfo } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
-import { platformInfo, emotionInfo } from "@/lib/mock-data"
+import type { Comment, Platform } from "@/types"
+import { ChevronDown, ChevronRight, ChevronUp, MessageSquare, Reply, ThumbsUp, Zap } from "lucide-react"
+import Image from "next/image"
+import type React from "react"
+import { memo } from "react"
 
 interface CommentCardProps {
   comment: Comment
@@ -143,7 +143,7 @@ function CommentCardComponent({
               </TooltipProvider>
             </div>
 
-            <p className="text-xs leading-tight mb-1 line-clamp-2">{displayText}</p>
+            <p className="text-xs leading-tight mb-1 line-clamp-2 wrap-anywhere">{displayText}</p>
 
             {needsTruncation && (
               <Button

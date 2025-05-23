@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { X, Zap } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
 import { Avatar } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
+import { X, Zap } from "lucide-react"
+import { useEffect, useState } from "react"
 
 interface ReplyDialogProps {
   comment: {
@@ -221,7 +221,7 @@ export function ReplyDialog({ comment, onClose, isBulkReply = false, selectedCom
           <TabsContent value="editor" className="p-4 mt-0">
             <Textarea
               placeholder="Write your reply..."
-              className="min-h-[120px] resize-none text-sm"
+              className="min-h-[120px] resize-none text-sm user-invalid:border-red-500 user-valid:border-green-500"
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
               disabled={isSubmitting}

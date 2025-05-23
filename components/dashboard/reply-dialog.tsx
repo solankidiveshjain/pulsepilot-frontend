@@ -1,24 +1,24 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Check, RefreshCw, Zap, Edit, MessageSquare, ChevronDown, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import Image from "next/image"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
+import { Check, ChevronDown, Edit, MessageSquare, RefreshCw, Users, Zap } from "lucide-react"
+import Image from "next/image"
+import { useEffect, useState } from "react"
 
 const platformColors = {
   youtube: "platform-badge-youtube",
@@ -337,9 +337,9 @@ export function ReplyDialog({ comment, onClose, isBulkReply = false, selectedCom
 
                   <Textarea
                     value={editedReply}
-                    onChange={(e) => setEditedReply(e.target.value)}
+                    onChange={(e) => setEditedReply(e.target.value ?? "")}
                     placeholder="Write your reply..."
-                    className="min-h-[120px] text-sm resize-none border-border/40"
+                    className="min-h-[120px] text-sm resize-none border-border/40 user-invalid:border-red-500 user-valid:border-green-500"
                   />
 
                   <div className="text-xs text-muted-foreground text-right">

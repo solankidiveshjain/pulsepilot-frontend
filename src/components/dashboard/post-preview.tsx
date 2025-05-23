@@ -1,15 +1,15 @@
 "use client"
 
-import { memo, useState, useEffect } from "react"
-import Image from "next/image"
-import { ExternalLink, ThumbsUp, MessageSquare, Eye, Calendar, ArrowRight } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Skeleton } from "@/components/ui/skeleton-loader"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { Post } from "@/types"
+import { ArrowRight, Calendar, ExternalLink, Eye, MessageSquare, ThumbsUp } from "lucide-react"
+import Image from "next/image"
+import { memo, useEffect, useState } from "react"
 
 interface PostPreviewProps {
   post: Post | null
@@ -71,7 +71,7 @@ function PostPreviewComponent({ post }: PostPreviewProps) {
                 <Skeleton className="h-3 w-full" />
                 <Skeleton className="h-3 w-3/4" />
               </div>
-              <div className="grid grid-cols-3 gap-1.5">
+              <div className="@container grid grid-cols-1 gap-1.5 @sm:grid-cols-2 @lg:grid-cols-3">
                 <Skeleton className="h-14 rounded-md" />
                 <Skeleton className="h-14 rounded-md" />
                 <Skeleton className="h-14 rounded-md" />
@@ -128,7 +128,7 @@ function PostPreviewComponent({ post }: PostPreviewProps) {
               </TooltipProvider>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="@container grid grid-cols-1 gap-1.5 @sm:grid-cols-2 @lg:grid-cols-3">
               <div className="flex flex-col items-center justify-center p-1.5 bg-muted/30 rounded-md">
                 <ThumbsUp className="h-3 w-3 text-primary mb-0.5" />
                 <span className="font-semibold text-xs">{post.likes}</span>
