@@ -58,10 +58,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Tailwind Core Import Test */}
-      <div className="flex items-center justify-center h-32 bg-blue-500 text-white">
-        Tailwind Test
-      </div>
       <header
         className={`sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled ? "bg-background/80 backdrop-blur-md shadow-sm" : "bg-transparent"}`}
       >
