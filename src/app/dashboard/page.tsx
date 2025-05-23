@@ -1,31 +1,43 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { TopNavigation } from "@/components/dashboard/top-navigation"
-import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import { CommentsFeed } from "@/components/dashboard/comments-feed"
 import { PostPreview } from "@/components/dashboard/post-preview"
-import { mockComments, mockPosts } from "@/lib/mock-data"
-import { X } from "lucide-react"
+import { DashboardSidebar } from "@/components/dashboard/sidebar"
+import { TopNavigation } from "@/components/dashboard/top-navigation"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Toaster } from "@/components/ui/toaster"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Filter } from "lucide-react"
+import { useComments } from '@/lib/hooks/comments'
+import { usePosts } from '@/lib/hooks/posts'
+import type { Comment, FilterState, Post } from '@/types'
+import { Filter, X } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function DashboardPage() {
-  const [selectedPost, setSelectedPost] = useState(null)
-  const [selectedComment, setSelectedComment] = useState(null)
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [filters, setFilters] = useState({
-    search: "",
-    status: "all",
+  const teamId = 'mock-team'
+  const [filters, setFilters] = useState<FilterState>({
+    search: '',
+    status: 'all',
     platforms: [],
     emotions: [],
     sentiments: [],
     categories: [],
   })
+  // Fetch posts and comments
+  const { data: postsData, isLoading: postsLoading } = usePosts(teamId, { page: 1, pageSize: 20 })
+  const posts = postsData?.items ?? []
+  const { data: commentsData, isLoading: commentsLoading } = useComments(teamId, {
+    archived: filters.status === 'archived',
+    flagged: filters.status === 'flagged',
+    page: 1,
+    pageSize: 50,
+  })
+  const rawComments = commentsData?.items ?? []
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const isMobile = useIsMobile()
 
   // Set preview open when a comment is selected
@@ -40,12 +52,12 @@ export default function DashboardPage() {
     if (isMobile && isPreviewOpen) {
       setIsPreviewOpen(false)
     }
-  }, [isMobile])
+  }, [isMobile, isPreviewOpen])
 
-  const handleCommentSelect = (comment) => {
+  const handleCommentSelect = (comment: Comment) => {
     setSelectedComment(comment)
     // Find the post associated with this comment
-    const post = mockPosts.find((p) => p.id === comment.postId)
+    const post = posts.find((p) => p.id === comment.postId)
     if (post) {
       setSelectedPost(post)
     }
@@ -60,12 +72,12 @@ export default function DashboardPage() {
     setIsPreviewOpen(false)
   }
 
-  const handleFilterChange = (newFilters) => {
+  const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters({ ...filters, ...newFilters })
   }
 
   // Filter comments based on current filters
-  const filteredComments = mockComments.filter((comment) => {
+  const filteredComments = rawComments.filter((comment) => {
     // Search filter
     if (filters.search && !comment.text.toLowerCase().includes(filters.search.toLowerCase())) {
       return false

@@ -2,31 +2,41 @@
 
 import type React from "react"
 
-import { useCallback, useRef, useState, useEffect } from "react"
-import { FixedSizeList as List } from "react-window"
-import InfiniteLoader from "react-window-infinite-loader"
-import AutoSizer from "react-virtualized-auto-sizer"
+import { useCommentsActions, useCommentsStore } from "@/components/comments/state/comments-store"
 import { CommentCard } from "@/components/comments/ui/comment-card"
 import { CommentReplies } from "@/components/comments/ui/comment-replies"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Button } from "@/components/ui/button"
 import { ErrorBoundary } from "@/components/ui/error-boundary"
-import { useCommentsStore, useCommentsActions } from "@/components/comments/state/comments-store"
+import { Input } from "@/components/ui/input"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useToast } from "@/hooks/use-toast"
-import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
-import { Search, X } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useComments } from "@/lib/hooks/comments"
+import type { Comment } from '@/types'
+import { AlertTriangle, MessageSquare, Search, X } from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import AutoSizer from "react-virtualized-auto-sizer"
+import { FixedSizeList as List } from "react-window"
+import InfiniteLoader from "react-window-infinite-loader"
 
 export default function CommentsFeedContainer() {
-  const comments = useCommentsStore((state) => state.filteredComments)
+  // Read filter state from the store
+  const filters = useCommentsStore((state) => state.filters)
+  // Fetch comments via React Query
+  const { data, isLoading, isError, error, refetch } = useComments("mock-team", {
+    archived: filters.status === "archived",
+    flagged: filters.status === "flagged",
+    page: 1,
+    pageSize: 20,
+  })
+  // Memoize comments list
+  const comments = useMemo(() => data?.items ?? [], [data?.items])
+  // Store state and actions
   const selectedComment = useCommentsStore((state) => state.selectedComment)
   const selectedComments = useCommentsStore((state) => state.selectedComments)
   const expandedComments = useCommentsStore((state) => state.expandedComments)
   const expandedReplies = useCommentsStore((state) => state.expandedReplies)
-  const isLoading = useCommentsStore((state) => state.isLoading)
-  const filters = useCommentsStore((state) => state.filters)
-
   const {
     setSelectedComment,
     toggleExpandComment,
@@ -39,13 +49,12 @@ export default function CommentsFeedContainer() {
     saveCommentForLater,
     updateFilters,
   } = useCommentsActions()
-
+  // Local UI state
   const [searchValue, setSearchValue] = useState(filters.search || "")
   const isMobile = useIsMobile()
   const { toast } = useToast()
-  const listRef = useRef<List>(null)
-
-  // Handle keyboard shortcuts
+  const listRef = useRef<any>(null)
+  // Keyboard shortcuts
   useKeyboardShortcuts([
     {
       keys: { key: "ArrowDown" },
@@ -53,7 +62,7 @@ export default function CommentsFeedContainer() {
         if (!comments.length) return
         const currentIndex = selectedComment ? comments.findIndex((c) => c.id === selectedComment.id) : -1
         const nextIndex = currentIndex < comments.length - 1 ? currentIndex + 1 : 0
-        setSelectedComment(comments[nextIndex])
+        setSelectedComment(comments[nextIndex]!)
 
         // Scroll to the selected comment
         if (listRef.current) {
@@ -67,7 +76,7 @@ export default function CommentsFeedContainer() {
         if (!comments.length) return
         const currentIndex = selectedComment ? comments.findIndex((c) => c.id === selectedComment.id) : -1
         const prevIndex = currentIndex > 0 ? currentIndex - 1 : comments.length - 1
-        setSelectedComment(comments[prevIndex])
+        setSelectedComment(comments[prevIndex]!)
 
         // Scroll to the selected comment
         if (listRef.current) {
@@ -116,7 +125,7 @@ export default function CommentsFeedContainer() {
 
   // Handle reply to comment
   const handleReply = useCallback(
-    (comment) => {
+    (comment: Comment) => {
       // In a real app, this would open a reply dialog
       toast({
         title: "Reply Dialog",
@@ -155,25 +164,32 @@ export default function CommentsFeedContainer() {
     return Promise.resolve()
   }
 
-  if (comments.length === 0 && !isLoading) {
+  // Loading state
+  if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center">
-        <svg
-          className="h-16 w-16 text-muted-foreground mb-4 opacity-50"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-          />
-        </svg>
-        <h3 className="text-xl font-medium">No comments found</h3>
-        <p className="text-muted-foreground">Try adjusting your filters to see more results</p>
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-2">
+        <AlertTriangle className="h-8 w-8 text-red-500" />
+        <p className="text-red-600">Error loading comments: {error?.message}</p>
+        <Button onClick={() => refetch()}>Retry</Button>
+      </div>
+    )
+  }
+
+  // Empty state
+  if (comments.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-2">
+        <MessageSquare className="h-8 w-8 text-muted-foreground" />
+        <p>No comments found</p>
       </div>
     )
   }
@@ -197,7 +213,7 @@ export default function CommentsFeedContainer() {
             isChecked={isChecked}
             isExpanded={isExpanded}
             isRepliesExpanded={isRepliesExpanded}
-            onSelect={() => setSelectedComment(comment)}
+            onSelect={() => setSelectedComment(comment!)}
             onReply={() => handleReply(comment)}
             onToggleSelect={() => toggleCommentSelection(comment.id)}
             onToggleExpand={() => toggleExpandComment(comment.id)}
@@ -257,12 +273,9 @@ export default function CommentsFeedContainer() {
                 itemCount={comments.length + (isLoading ? 1 : 0)}
                 loadMoreItems={loadMoreItems}
               >
-                {({ onItemsRendered, ref }) => (
+                {( { onItemsRendered, ref }: any ) => (
                   <List
-                    ref={(list) => {
-                      ref(list)
-                      listRef.current = list
-                    }}
+                    ref={(list: any) => { ref(list); listRef.current = list }}
                     height={height}
                     width={width}
                     itemCount={comments.length}

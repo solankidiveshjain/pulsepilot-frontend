@@ -1,32 +1,33 @@
 "use client"
 
-import { memo } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { categoryFilters, emotionFilters, platformFilters, sentimentFilters, statusFilters } from "@/lib/mock-data"
+import type { FilterState } from '@/types'
 import { ChevronDown } from "lucide-react"
-import { useCommentsStore, useCommentsActions } from "@/components/comments/state/comments-store"
-import { statusFilters, platformFilters, emotionFilters, sentimentFilters, categoryFilters } from "@/lib/mock-data"
+import Image from "next/image"
+import { memo } from "react"
 
-function DashboardSidebarComponent() {
-  const filters = useCommentsStore((state) => state.filters)
-  const { updateFilters } = useCommentsActions()
+interface DashboardSidebarProps {
+  filters: FilterState
+  onFilterChange: (newFilters: Partial<FilterState>) => void
+}
 
+function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebarProps) {
   const handleStatusChange = (status: string) => {
-    updateFilters({ status: status as any })
+    onFilterChange({ status: status as any })
   }
 
   const handleFilterToggle = (filterType: string, filterId: string) => {
-    const currentFilters = filters[filterType as keyof typeof filters] || []
-    const newFilters = Array.isArray(currentFilters)
-      ? currentFilters.includes(filterId)
-        ? currentFilters.filter((id) => id !== filterId)
-        : [...currentFilters, filterId]
+    const current = filters[filterType as keyof FilterState] || []
+    const newFilters = Array.isArray(current)
+      ? current.includes(filterId)
+        ? (current as string[]).filter((id) => id !== filterId)
+        : [...(current as string[]), filterId]
       : [filterId]
-
-    updateFilters({ [filterType]: newFilters })
+    onFilterChange({ [filterType]: newFilters } as Partial<FilterState>)
   }
 
   return (

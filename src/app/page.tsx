@@ -354,7 +354,7 @@ export default function LandingPage() {
                   variants={fadeIn}
                 >
                   <div className="flex-1">
-                    <div className="text-4xl text-primary mb-4">"</div>
+                    <div className="text-4xl text-primary mb-4">&quot;</div>
                     <p className="italic mb-6">{testimonial.quote}</p>
                   </div>
                   <div className="flex items-center gap-4">

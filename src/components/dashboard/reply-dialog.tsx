@@ -1,13 +1,13 @@
 "use client"
 
-import { Avatar } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { X, Zap } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 interface ReplyDialogProps {
   comment: {
@@ -32,15 +32,15 @@ export function ReplyDialog({ comment, onClose, isBulkReply = false, selectedCom
   const { toast } = useToast()
 
   // AI suggestions
-  const aiSuggestions = [
+  const aiSuggestions = useMemo<string[]>(() => [
     "Thanks so much for your comment! I really appreciate you taking the time to share your thoughts.",
     "Thank you for the feedback! It means a lot to hear from viewers like you.",
-  ]
+  ], [])
 
   useEffect(() => {
     // Set the first suggestion as the reply text initially
-    setReplyText(aiSuggestions[0])
-  }, [])
+    setReplyText(aiSuggestions[0]!)
+  }, [aiSuggestions])
 
   // Handle escape key to close dialog
   useEffect(() => {
@@ -54,7 +54,7 @@ export function ReplyDialog({ comment, onClose, isBulkReply = false, selectedCom
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [onClose])
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!replyText.trim()) return
 
     setIsSubmitting(true)
@@ -69,11 +69,26 @@ export function ReplyDialog({ comment, onClose, isBulkReply = false, selectedCom
       })
       onClose()
     }, 1000)
-  }
+  }, [replyText, toast, onClose, comment.author.name])
+
+  // Handle keyboard shortcut for submission
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Cmd/Ctrl + Enter
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        if (replyText && !isSubmitting) {
+          handleSubmit()
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [replyText, isSubmitting, handleSubmit])
 
   const selectSuggestion = (index: number) => {
     setSelectedSuggestion(index)
-    setReplyText(aiSuggestions[index])
+    setReplyText(aiSuggestions[index]!)
   }
 
   const handleQuickReply = (type: string) => {
@@ -119,11 +134,9 @@ export function ReplyDialog({ comment, onClose, isBulkReply = false, selectedCom
           <div className="flex items-start gap-3">
             <Avatar className="h-8 w-8">
               {comment.author.avatar ? (
-                <img src={comment.author.avatar || "/placeholder.svg"} alt={comment.author.name} />
+                <AvatarImage src={comment.author.avatar || "/placeholder.svg"} alt={comment.author.name} />
               ) : (
-                <div className="bg-muted h-full w-full rounded-full flex items-center justify-center text-muted-foreground">
-                  {comment.author.name.charAt(0)}
-                </div>
+                <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
               )}
             </Avatar>
             <div className="flex-1">

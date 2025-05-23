@@ -1,3 +1,4 @@
+import { QueryProvider } from '@/components/query-provider'
 import { ThemeProvider } from "@/components/theme-provider"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
@@ -27,9 +28,11 @@ export default function RootLayout({
           disableTransitionOnChange
           enableColorScheme={false}
         >
-          <div className="min-h-screen flex flex-col bg-linear-to-br from-background to-secondary/30">
-            {children}
-          </div>
+          <QueryProvider>
+            <div className="min-h-screen flex flex-col bg-linear-to-br from-background to-secondary/30">
+              {children}
+            </div>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

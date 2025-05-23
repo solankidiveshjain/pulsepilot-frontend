@@ -1,42 +1,41 @@
-import type { Connection, ConnectionRequest } from '@/types'
+import type { ConnectionResponse, OffboardConnectionParams, OnboardConnectionRequest, PlatformConnectionParams } from '@/components/social/models/api'
 import { del, post } from './apiClient'
 import { useMock } from './config'
 
 /**
- * Connect a social media platform for the team
+ * Connects a social media platform for a team
  */
 export async function onboardPlatform(
-  teamId: string,
-  platform: string,
-  body: ConnectionRequest
-): Promise<Connection> {
+  params: PlatformConnectionParams,
+  body: OnboardConnectionRequest
+): Promise<ConnectionResponse> {
   if (useMock) {
     return Promise.resolve({
-      id: `mock-conn-${Math.random().toString(36).substr(2, 9)}`,
-      platform,
+      id: 'mock-connection',
+      platform: params.platform,
       status: 'connected',
       createdAt: new Date().toISOString(),
       metadata: {},
     })
   }
-  return post<Connection>(
-    `/teams/${teamId}/platforms/${platform}/connections`,
+
+  return post<ConnectionResponse>(
+    `/teams/${params.teamId}/platforms/${params.platform}/connections`,
     body
   )
 }
 
 /**
- * Disconnect a social media platform for the team
+ * Disconnects a social media platform for a team
  */
 export async function offboardPlatform(
-  teamId: string,
-  platform: string,
-  connectionId: string
+  params: OffboardConnectionParams
 ): Promise<void> {
   if (useMock) {
     return Promise.resolve()
   }
-  await del<void>(
-    `/teams/${teamId}/platforms/${platform}/connections/${connectionId}`
+
+  return del<void>(
+    `/teams/${params.teamId}/platforms/${params.platform}/connections/${params.connectionId}`
   )
 }

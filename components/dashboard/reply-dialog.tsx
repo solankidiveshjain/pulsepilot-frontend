@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { Check, ChevronDown, Edit, MessageSquare, RefreshCw, Users, Zap } from "lucide-react"
 import Image from "next/image"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 const platformColors = {
   youtube: "platform-badge-youtube",
@@ -128,7 +128,7 @@ export function ReplyDialog({ comment, onClose, isBulkReply = false, selectedCom
     setEditedReply(newReply)
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     setIsSubmitting(true)
 
     // Simulate submission
@@ -146,7 +146,7 @@ export function ReplyDialog({ comment, onClose, isBulkReply = false, selectedCom
 
       onClose()
     }, 1000)
-  }
+  }, [toast, onClose, comment.author.name, isBulkReply, recipients.length])
 
   // Handle keyboard shortcut for submission
   useEffect(() => {
@@ -161,7 +161,7 @@ export function ReplyDialog({ comment, onClose, isBulkReply = false, selectedCom
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [editedReply, isSubmitting])
+  }, [editedReply, isSubmitting, handleSubmit])
 
   return (
     <Dialog open={true} onOpenChange={onClose}>

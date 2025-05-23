@@ -2,21 +2,21 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { ArrowRight, Info, Upload } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Upload, Info, ArrowRight } from "lucide-react"
+import { useState } from "react"
 
+import { ModeToggle } from "@/components/mode-toggle"
+import { ActionBiasSelector } from "@/components/onboarding/action-bias-selector"
+import { ProgressIndicator } from "@/components/onboarding/progress-indicator"
+import { ToneSelector } from "@/components/onboarding/tone-selector"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
-import { ProgressIndicator } from "@/components/onboarding/progress-indicator"
-import { ToneSelector } from "@/components/onboarding/tone-selector"
-import { ActionBiasSelector } from "@/components/onboarding/action-bias-selector"
-import { ModeToggle } from "@/components/mode-toggle"
 
 export default function ProfileSetupPage() {
   const router = useRouter()
@@ -60,7 +60,7 @@ export default function ProfileSetupPage() {
           <h1 className="text-4xl font-bold">
             Welcome to <span className="social-gradient-text">PulsePilot</span>
           </h1>
-          <p className="text-muted-foreground text-lg">Let's set up your profile</p>
+          <p className="text-muted-foreground text-lg">Let&apos;s set up your profile</p>
         </div>
 
         <ProgressIndicator currentStep={1} totalSteps={2} />
@@ -123,7 +123,7 @@ export default function ProfileSetupPage() {
                         </TooltipTrigger>
                         <TooltipContent className="bg-foreground text-background">
                           <p className="max-w-xs">
-                            e.g., I'm a travel influencer, food vlogger, or manage a political handle
+                            e.g., I&apos;m a travel influencer, food vlogger, or manage a political handle
                           </p>
                         </TooltipContent>
                       </Tooltip>
