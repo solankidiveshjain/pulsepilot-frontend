@@ -4,7 +4,7 @@ PulsePilot is a modern social media management platform focused on comment manag
 
 ## Tech Stack
 
-- **Framework**: Next.js 14+ (App Router)
+- **Framework**: Next.js 15.x (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS with ShadCN UI components
 - **State Management**: Zustand & TanStack Query
@@ -33,13 +33,13 @@ PulsePilot is a modern social media management platform focused on comment manag
    npm install
    ```
 
-3. Set up environment variables:
+3. Create environment file:
 
    ```bash
-   cp .env.example .env.local
+   touch .env.local
    ```
 
-   Edit `.env.local` with your configuration values.
+   Add required environment variables in `.env.local`.
 
 4. Start the development server:
 
@@ -66,12 +66,11 @@ All pull requests must adhere to these guidelines or they will be rejected.
 
 ### Performance Guidelines
 
-- Use memoization (React.memo, useMemo, useCallback) to minimize re-renders
-- Implement code splitting with dynamic imports for routes and large components
-- Use Next.js Image component for all images to ensure proper optimization
-- Implement virtualization for long lists using react-window (not react-virtualized)
-- Use bundle analyzer to monitor bundle size: `npm run analyze`
-- Implement proper loading states and skeleton screens during data fetching
+Use memoization (React.memo, useMemo, useCallback) to minimize re-renders
+Implement code splitting with dynamic imports for routes and large components
+Use Next.js Image component for all images to ensure proper optimization
+Implement virtualization for long lists using react-window (not react-virtualized)
+Implement proper loading states and skeleton screens during data fetching
 
 ### State Management
 
@@ -99,10 +98,9 @@ All pull requests must adhere to these guidelines or they will be rejected.
 
 ### Code Quality
 
-- **Linting**: Run `npm run lint` to check for linting errors
-- **Type checking**: Run `npm run type-check` to check for TypeScript errors
-- **Formatting**: Run `npm run format` to format code with Prettier
-- **Testing**: Run `npm run test` to run unit and integration tests
+Linting: Run `npm run lint` to check for linting errors
+Development: Run `npm run dev` to start the development server
+Build: Run `npm run build` to create a production build
 
 ### Branch Strategy
 
@@ -137,9 +135,7 @@ Example: `feat(auth): add social login functionality`
 
 ## Testing
 
-- **Unit and integration tests**: `npm run test`
-- **End-to-end tests**: `npm run test:e2e`
-- **Test coverage**: `npm run test:coverage` (minimum 80% coverage required)
+Testing scripts are not yet configured.
 
 ## Production Build
 
@@ -150,8 +146,7 @@ npm run start
 
 ## Documentation
 
-- Component and hooks documentation is available via Storybook: `npm run storybook`
-- API documentation is available in the codebase and through OpenAPI specs
+API documentation is available through OpenAPI specs
 
 ## Deployment
 
