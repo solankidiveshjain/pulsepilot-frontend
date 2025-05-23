@@ -1,58 +1,37 @@
-import "@/app/globals.css";
-import type { Metadata, Viewport } from "next";
-import type { WebVitalsMetric } from "next/dist/compiled/web-vitals";
-import { Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import type React from "react"
+import "./globals.css"
 
-import { AppProvider } from "@/components/providers/app-provider";
-import { ThemeProvider } from "@/components/providers/theme-provider";
-
-// Import the web vitals function
-import { sendWebVitalsToAnalytics } from "@/lib/utils/web-vitals";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-});
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "PulsePilot - Social Media Management Platform",
-  description: "Optimize your social media presence with PulsePilot",
-  authors: [{ name: "PulsePilot Team" }],
-  keywords: ["social media", "management", "analytics", "scheduling"],
-};
-
-export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "black" },
-  ],
-  width: "device-width",
-  initialScale: 1,
-};
-
-// Report web vitals
-export function reportWebVitals(metric: WebVitalsMetric) {
-  sendWebVitalsToAnalytics(metric);
+  title: "PulsePilot - Unified Comment Dashboard",
+  description: "Manage and respond to comments across multiple social platforms",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen bg-background antialiased`}>
+    <html lang="en" className="light">
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
+          enableColorScheme={false}
         >
-          <AppProvider>{children}</AppProvider>
+          <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-secondary/30">
+            {children}
+          </div>
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

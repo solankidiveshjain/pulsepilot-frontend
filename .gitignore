@@ -2,16 +2,6 @@
 
 # dependencies
 /node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
-
-# testing
-/coverage
-/test-results
-/playwright-report
-/blob-report
-/.nyc_output
 
 # next.js
 /.next/
@@ -19,15 +9,6 @@
 
 # production
 /build
-/dist
-
-# misc
-.DS_Store
-*.pem
-.env*.local
-.env.development
-.env.test
-.env.production
 
 # debug
 npm-debug.log*
@@ -35,77 +16,31 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
-.env*.local
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# env files
+.env*
 
 # vercel
 .vercel
-
-# turbo
-.turbo
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# editors
+# OS-specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDEs and editors
+.vscode/
 .idea/
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
 
-# PWA files
-**/public/sw.js
-**/public/workbox-*.js
-**/public/worker-*.js
-**/public/sw.js.map
-**/public/workbox-*.js.map
-**/public/worker-*.js.map
+# Testing coverage
+/coverage/
 
-# Storybook
-/storybook-static
-
-# Bundle analyzer
-/analyze
-
-# Cache
+# ESLint cache
 .eslintcache
-.stylelintcache
-.prettiercache
-.cache/
 
-# Temporary files
-*.log
-*.swp
-*.swo
-*~
-.temp/
-tmp/
-
-# Environment
-.direnv/
-.envrc
-
-# Generated API files
-/src/api/generated/
-
-# Cypress
-/cypress/videos/
-/cypress/screenshots/
-
-# Lighthouse reports
-.lighthouseci/
-
-# Sentry Auth Token
-.sentryclirc
-
-# Bundle analyzer reports
-/analyze/
-bundle-stats.json
-stats.json
+# Yarn PnP
+.pnp.*
