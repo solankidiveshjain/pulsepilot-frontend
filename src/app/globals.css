@@ -277,10 +277,10 @@
   @keyframes border-pulse {
     0%,
     100% {
-      border-color: theme("colors.primary.DEFAULT");
+      border-color: hsl(var(--primary));
     }
     50% {
-      border-color: theme("colors.primary.DEFAULT / 0.5");
+      border-color: hsl(var(--primary) / 0.5);
     }
   }
 
