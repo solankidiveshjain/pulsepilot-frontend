@@ -1,8 +1,10 @@
-@import "tailwindcss/preflight";
-@tailwind utilities;
+@import 'tailwindcss/preflight' layer(utilities);
+@import 'tailwindcss/utilities' layer(utilities);
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+  }
 }
 
 @layer utilities {
