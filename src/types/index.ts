@@ -139,3 +139,61 @@ export interface ActiveFilter {
   label: string
   icon?: string
 }
+
+// Pagination interface for API responses
+export interface Pagination {
+  page: number
+  pageSize: number
+  totalItems: number
+  totalPages: number
+}
+
+// Post preview types
+export interface TextPreview {
+  type: 'text'
+  content: string
+}
+
+export interface ImagePreview {
+  type: 'image'
+  url: string
+  width: number
+  height: number
+  thumbnailUrl: string
+}
+
+export interface VideoPreview {
+  type: 'video'
+  url: string
+  duration: number
+  thumbnailUrl: string
+}
+
+// Union of all preview types
+export type PostPreview = TextPreview | ImagePreview | VideoPreview
+
+// Profile interface for user and team settings
+export interface Profile {
+  id: string
+  teamId: string
+  userName: string
+  email: string
+  avatarUrl: string
+  roles: string[]
+  settings: Record<string, unknown>
+}
+
+// Social connection types
+export interface ConnectionRequest {
+  accessToken: string
+  refreshToken?: string
+  expiresIn?: number
+}
+
+export interface Connection {
+  id: string
+  platform: string
+  status: 'connected' | 'disconnected'
+  createdAt: string
+  metadata: Record<string, unknown>
+}
