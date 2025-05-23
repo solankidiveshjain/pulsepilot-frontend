@@ -161,10 +161,20 @@ const config = {
             "background-position": "0% 50%",
           },
         },
+        "border-pulse": {
+          "0%, 100%": { "border-color": "hsl(var(--primary))" },
+          "50%": { "border-color": "hsl(var(--primary) / 0.5)" }
+        },
+        "slide-down": {
+          "from": { "opacity": "0", "transform": "translateY(-10px)" },
+          "to": { "opacity": "1", "transform": "translateY(0)" }
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "border-pulse": "border-pulse 2s ease-in-out infinite",
+        "slide-down": "slide-down 0.2s ease-out forwards",
         "pulse-slow": "pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "slide-in-left": "slide-in-left 0.3s ease-out",

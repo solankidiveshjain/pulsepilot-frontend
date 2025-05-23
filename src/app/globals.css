@@ -140,7 +140,7 @@
     @apply shadow-md bg-slate-100 dark:bg-slate-800 border-l-4 border-primary animate-border-pulse;
   }
 
-  .pulse-dot {
+  .pulse-dot { /* This class should now correctly use the 'animate-pulse-slow' utility from tailwind.config.ts */
     @apply h-2 w-2 rounded-full bg-primary animate-pulse-slow;
   }
 
@@ -283,7 +283,8 @@
     overflow: hidden;
   }
 
-  /* Animation for active comment border */
+  /* Animation for active comment border (now in tailwind.config.ts) */
+  /*
   @keyframes border-pulse {
     0%,
     100% {
@@ -293,12 +294,16 @@
       border-color: hsl(var(--primary) / 0.5);
     }
   }
+  */
 
+  /*
   .animate-border-pulse {
     animation: border-pulse 2s ease-in-out infinite;
   }
+  */
 
-  /* AI pulse effect */
+  /* AI pulse effect (unused) */
+  /*
   @keyframes ai-pulse {
     0% {
       opacity: 0.7;
@@ -310,12 +315,14 @@
       opacity: 0.7;
     }
   }
+  */
 
-  .ai-pulse {
+  .ai-pulse { /* This class uses 'pulse-slow' which will now defer to tailwind.config.ts */
     animation: pulse-slow 2s ease-in-out infinite;
   }
 
-  /* Slide down animation */
+  /* Slide down animation (now in tailwind.config.ts) */
+  /*
   @keyframes slide-down {
     from {
       opacity: 0;
@@ -326,12 +333,16 @@
       transform: translateY(0);
     }
   }
+  */
 
+  /*
   .animate-slide-down {
     animation: slide-down 0.2s ease-out forwards;
   }
+  */
 
-  /* Slide in top animation */
+  /* Slide in top animation (defined in tailwind.config.ts) */
+  /*
   @keyframes slide-in-top {
     from {
       transform: translateY(-10px);
@@ -342,12 +353,16 @@
       opacity: 1;
     }
   }
+  */
 
+  /*
   .animate-slide-in-top {
     animation: slide-in-top 0.3s ease-out;
   }
+  */
 
-  /* Fade in animation */
+  /* Fade in animation (defined in tailwind.config.ts) */
+  /*
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -356,12 +371,16 @@
       opacity: 1;
     }
   }
+  */
 
+  /*
   .animate-fade-in {
     animation: fade-in 0.3s ease-out;
   }
+  */
 
-  /* Pulse slow animation */
+  /* Pulse slow animation (defined in tailwind.config.ts) */
+  /*
   @keyframes pulse-slow {
     0%,
     100% {
@@ -371,12 +390,16 @@
       opacity: 0.6;
     }
   }
+  */
 
+  /*
   .animate-pulse-slow {
     animation: pulse-slow 2s ease-in-out infinite;
   }
+  */
 
-  /* Gradient animation */
+  /* Gradient animation (defined in tailwind.config.ts) */
+  /*
   @keyframes gradient-x {
     0%,
     100% {
@@ -386,13 +409,17 @@
       background-position: 100% 50%;
     }
   }
+  */
 
+  /*
   .animate-gradient-x {
     animation: gradient-x 15s ease infinite;
     background-size: 200% 200%;
   }
+  */
 
-  /* Accordion animations */
+  /* Accordion animations (defined in tailwind.config.ts) */
+  /*
   @keyframes accordion-down {
     from {
       height: 0;
@@ -401,7 +428,9 @@
       height: var(--radix-accordion-content-height);
     }
   }
+  */
 
+  /*
   @keyframes accordion-up {
     from {
       height: var(--radix-accordion-content-height);
@@ -410,14 +439,19 @@
       height: 0;
     }
   }
+  */
 
+  /*
   .animate-accordion-down {
     animation: accordion-down 0.2s ease-out;
   }
+  */
 
+  /*
   .animate-accordion-up {
     animation: accordion-up 0.2s ease-out;
   }
+  */
 
   .reply-card {
     transition: all 0.2s ease;
