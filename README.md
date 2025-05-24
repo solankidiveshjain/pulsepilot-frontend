@@ -11,7 +11,7 @@ PulsePilot is a modern social media management platform focused on comment manag
 - **Animation**: Framer Motion
 - **Form Handling**: React Hook Form
 - **Icons**: Lucide
-- **Testing**: Jest, React Testing Library, Playwright
+- **Testing**: Vitest, React Testing Library, Playwright
 
 ## Prerequisites
 
@@ -137,8 +137,8 @@ Example: `feat(auth): add social login functionality`
 
 The project is configured with unit/integration tests using Jest and React Testing Library, and end-to-end tests using Playwright.
 
-- Run unit/integration tests: `npm test`
-- Run end-to-end tests: `npm run test:e2e`
+- Run unit tests: `npm run test:unit`
+- Run all tests (unit + e2e): `npm test`
 
 These tests are also executed as part of the CI pipeline.
 
