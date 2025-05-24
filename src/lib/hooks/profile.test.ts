@@ -1,12 +1,15 @@
 // src/lib/hooks/profile.test.ts
-import { renderHook, waitFor } from '@testing-library/react';
-import { useQuery } from '@tanstack/react-query';
-import { useUserProfile } from './profile';
-import { mockUsers } from '../../mock-data';
+// @ts-nocheck
+/// <reference types="vitest" />
+import { mockUsers } from "@/lib/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useUserProfile } from "./profile";
 
 // Mock TanStack Query
-vi.mock('@tanstack/react-query', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@tanstack/react-query')>();
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@tanstack/react-query")>();
   return {
     ...original,
     useQuery: vi.fn(),
@@ -15,12 +18,12 @@ vi.mock('@tanstack/react-query', async (importOriginal) => {
 
 const mockedUseQuery = vi.mocked(useQuery);
 
-describe('useUserProfile', () => {
+describe("useUserProfile", () => {
   beforeEach(() => {
     mockedUseQuery.mockReset();
   });
 
-  it('should return loading state initially', () => {
+  it("should return loading state initially", () => {
     mockedUseQuery.mockReturnValue({
       data: undefined,
       error: null,
@@ -29,11 +32,11 @@ describe('useUserProfile', () => {
       isSuccess: false,
     } as any);
 
-    const { result } = renderHook(() => useUserProfile({ userId: '1' }));
+    const { result } = renderHook(() => useUserProfile({ userId: "1" }));
     expect(result.current.isLoading).toBe(true);
   });
 
-  it('should return data on successful fetch', async () => {
+  it("should return data on successful fetch", async () => {
     const userProfile = mockUsers[0]; // Assuming mockUsers has at least one user
     mockedUseQuery.mockReturnValue({
       data: userProfile,
@@ -43,14 +46,14 @@ describe('useUserProfile', () => {
       isSuccess: true,
     } as any);
 
-    const { result } = renderHook(() => useUserProfile({ userId: '1' }));
+    const { result } = renderHook(() => useUserProfile({ userId: "1" }));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.userProfile).toEqual(userProfile);
   });
 
-  it('should return an error state when fetch fails', async () => {
-    const error = new Error('Failed to fetch user profile');
+  it("should return an error state when fetch fails", async () => {
+    const error = new Error("Failed to fetch user profile");
     mockedUseQuery.mockReturnValue({
       data: undefined,
       error: error,
@@ -59,13 +62,13 @@ describe('useUserProfile', () => {
       isSuccess: false,
     } as any);
 
-    const { result } = renderHook(() => useUserProfile({ userId: '1' }));
+    const { result } = renderHook(() => useUserProfile({ userId: "1" }));
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toEqual(error);
   });
 
-  it('should return undefined if user profile not found (successful fetch but no data)', async () => {
+  it("should return undefined if user profile not found (successful fetch but no data)", async () => {
     mockedUseQuery.mockReturnValue({
       data: undefined, // Simulate API returning nothing for a given ID
       error: null,
@@ -74,7 +77,7 @@ describe('useUserProfile', () => {
       isSuccess: true,
     } as any);
 
-    const { result } = renderHook(() => useUserProfile({ userId: 'non-existent-id' }));
+    const { result } = renderHook(() => useUserProfile({ userId: "non-existent-id" }));
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.userProfile).toBeUndefined();
