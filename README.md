@@ -137,8 +137,8 @@ Example: `feat(auth): add social login functionality`
 
 The project is configured with unit/integration tests using Jest and React Testing Library, and end-to-end tests using Playwright.
 
--   Run unit/integration tests: `npm test`
--   Run end-to-end tests: `npm run test:e2e`
+- Run unit/integration tests: `npm test`
+- Run end-to-end tests: `npm run test:e2e`
 
 These tests are also executed as part of the CI pipeline.
 
@@ -199,3 +199,28 @@ To run the frontend against a realistic mock backend, follow these steps:
    ```
 
 5. Open your browser at [http://localhost:3000](http://localhost:3000) to see the app using mock data.
+
+### Dynamic Filter-Badge Counts
+
+To ensure sidebar filter badges always reflect up-to-date data, we now fetch counts from the `/api/comments/filters/counts` endpoint.
+
+1. Open `src/services/comments.ts`. You'll find a new:
+
+   ```ts
+   export async function fetchFilterCounts(): Promise<FilterCounts> {
+     const res = await fetch("/api/comments/filters/counts");
+     return res.json();
+   }
+   ```
+
+2. In your sidebar container/component (e.g. `DashboardSidebar`), use React Query:
+
+   ```ts
+   const { data: counts, isLoading } = useQuery("filterCounts", fetchFilterCounts);
+   ```
+
+3. Merge the returned `counts` object with your filter definitions (icons/labels) instead of hard-coded mock arrays. Show a loading placeholder while `isLoading`.
+
+4. Remove or deprecate the old static count fields in `src/lib/mock-data.ts`; your UI will now drive counts purely from the live API.
+
+By delegating aggregation to the server, you eliminate client-side rescanning and ensure fast, accurate badges without UI jank.

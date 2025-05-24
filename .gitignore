@@ -44,3 +44,7 @@ Desktop.ini
 
 # Yarn PnP
 .pnp.*
+
+# Playwright test reports
+/playwright-report/
+/e2e-results/
