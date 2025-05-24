@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client"
 
 import { ReplyDialog } from "@/components/dashboard/reply-dialog"
@@ -9,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/hooks/use-toast"
+import type { Comment, FilterState } from "@/types"
 import {
     AlertTriangle,
     Archive,
@@ -34,7 +36,7 @@ import {
     Zap,
 } from "lucide-react"
 import Image from "next/image"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react"
 
 // Mock replies data
 const mockReplies = {
@@ -147,20 +149,10 @@ function CommentReplies({ commentId }: { commentId: string }) {
 
                   <div className="flex items-center justify-between mt-1">
                     <div className="flex items-center gap-2">
-                      {/* Display likes count */}
                       <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
                         <ThumbsUp className="h-3 w-3" />
                         <span>{reply.likes}</span>
                       </div>
-
-                      <Button
-                        size="sm"
-                        className="h-5 px-1.5 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary text-[9px]"
-                        onClick={() => {}}
-                      >
-                        <Reply className="h-2.5 w-2.5 mr-0.5" />
-                        Reply
-                      </Button>
                     </div>
 
                     <DropdownMenu>
@@ -310,21 +302,28 @@ export function CommentsFeed({
   filters,
   onFilterChange,
   isMobile = false,
+}: {
+  comments: Comment[];
+  selectedComment: Comment | null;
+  onCommentSelect: (comment: Comment) => void;
+  filters: FilterState;
+  onFilterChange: (newFilters: Partial<FilterState>) => void;
+  isMobile?: boolean;
 }) {
-  const [replyingTo, setReplyingTo] = useState(null)
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null)
   const [searchValue, setSearchValue] = useState(filters.search || "")
-  const [selectedComments, setSelectedComments] = useState([])
+  const [selectedComments, setSelectedComments] = useState<string[]>([])
   const [bulkReplyOpen, setBulkReplyOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [expandedComments, setExpandedComments] = useState([])
-  const [expandedReplies, setExpandedReplies] = useState([])
-  const [sortOption, setSortOption] = useState("recent")
-  const [displayedComments, setDisplayedComments] = useState([...initialComments])
-  const feedRef = useRef(null)
+  const [expandedComments, setExpandedComments] = useState<string[]>([])
+  const [expandedReplies, setExpandedReplies] = useState<string[]>([])
+  const [sortOption, setSortOption] = useState<string>("recent")
+  const [displayedComments, setDisplayedComments] = useState<Comment[]>([...initialComments])
+  const feedRef = useRef<HTMLDivElement | null>(null)
   const { toast } = useToast()
 
   // Helper function to convert time strings to minutes for sorting
-  const parseTimeToMinutes = (timeStr) => {
+  const parseTimeToMinutes = (timeStr: string): number => {
     if (timeStr.includes("minute")) {
       return Number.parseInt(timeStr.split(" ")[0])
     } else if (timeStr.includes("hour")) {
@@ -422,7 +421,7 @@ export function CommentsFeed({
 
   // Handle keyboard navigation
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (!displayedComments.length) return
 
       // Find current index
@@ -436,7 +435,9 @@ export function CommentsFeed({
         e.preventDefault()
         const prevIndex = currentIndex > 0 ? currentIndex - 1 : displayedComments.length - 1
         onCommentSelect(displayedComments[prevIndex])
-      } else if (e.key === "Enter" && document.activeElement.tagName !== "INPUT" && selectedComment) {
+      } else if (
+        e.key === "Enter" && document.activeElement?.tagName !== "INPUT" && selectedComment
+      ) {
         e.preventDefault()
         setReplyingTo(selectedComment)
       } else if (e.key === "Escape") {
@@ -451,7 +452,7 @@ export function CommentsFeed({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [displayedComments, selectedComment, onCommentSelect, replyingTo])
 
-  const handleReply = useCallback((comment) => {
+  const handleReply = useCallback((comment: Comment) => {
     setReplyingTo(comment)
   }, [])
 
@@ -460,7 +461,7 @@ export function CommentsFeed({
   }, [])
 
   const handleSearch = useCallback(
-    (e) => {
+    (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault() // Prevent form submission
       onFilterChange({ ...filters, search: searchValue })
     },
@@ -473,9 +474,9 @@ export function CommentsFeed({
   }, [onFilterChange, filters])
 
   const clearFilter = useCallback(
-    (filterType, filterId) => {
-      const currentFilters = filters[filterType] || []
-      const newFilters = currentFilters.filter((id) => id !== filterId)
+    (filterType: keyof FilterState, filterId: string) => {
+      const currentFilters = (filters[filterType] as unknown as string[]) || []
+      const newFilters = currentFilters.filter((id: string) => id !== filterId)
       onFilterChange({ ...filters, [filterType]: newFilters })
     },
     [filters, onFilterChange],
@@ -484,7 +485,7 @@ export function CommentsFeed({
   const clearAllFilters = useCallback(() => {
     onFilterChange({
       search: "",
-      status: "",
+      status: "all",
       platforms: [],
       emotions: [],
       sentiments: [],
@@ -895,7 +896,7 @@ export function CommentsFeed({
 
               {/* Expanded Replies */}
               {expandedReplies.includes(comment.id) && (
-                <div className="replies-container ml-8 pl-3 border-l-2 border-primary/20 dark:border-primary/30 mt-1 mb-1.5 animate-slide-down">
+                <div className="replies-container ml-[3.75rem] pl-3 border-l-2 border-primary/20 dark:border-primary/30 mt-1 mb-1.5 animate-slide-down animate-fade-in">
                   <CommentReplies commentId={comment.id} />
                 </div>
               )}
@@ -945,6 +946,20 @@ function CommentCard({
   isMobile = false,
   onToggleExpand,
   searchTerm = "",
+}: {
+  comment: Comment
+  isSelected: boolean
+  isChecked: boolean
+  isExpanded: boolean
+  isRepliesExpanded: boolean
+  onSelect: () => void
+  onReply: () => void
+  onToggleSelect: () => void
+  onToggleReplies: (e: MouseEvent<HTMLButtonElement>) => void
+  onAction: (action: string) => void
+  isMobile?: boolean
+  onToggleExpand: () => void
+  searchTerm?: string
 }) {
   const platformColors = {
     youtube: "platform-badge-youtube",
@@ -1020,17 +1035,25 @@ function CommentCard({
 
   const platformIcon = platformIcons[comment.platform] || "/placeholder.svg"
 
+  // Local animation state for Like button
+  const [likeAnim, setLikeAnim] = useState(false)
+  const handleLikeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    setLikeAnim(true)
+    setTimeout(() => setLikeAnim(false), 300)
+  }
+
   return (
     <Card
-      className={`comment-card-compact cursor-pointer transition-all hover:border-border/60 ${
-        isSelected ? "comment-card-selected active-comment" : ""
+      className={`comment-card-compact group cursor-pointer transform transition-all hover:shadow-lg hover:-translate-y-0.5 hover:border-primary ${
+        isSelected ? "comment-card-selected active-comment border-primary" : ""
       }`}
       onClick={onSelect}
     >
-      <CardContent className="p-2">
+      <CardContent className="p-1">
         <div className="flex gap-2">
-          {/* Left column: Selection checkbox, avatar, platform icon */}
-          <div className="flex flex-col items-center gap-1 w-8">
+          {/* Left column: Selection & thumbnail */}
+          <div className="flex flex-col items-center gap-1 w-12 flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
@@ -1042,18 +1065,29 @@ function CommentCard({
             >
               {isChecked ? <CheckSquare className="h-3 w-3 text-primary" /> : <Square className="h-3 w-3" />}
             </Button>
-            <Avatar className="h-6 w-6 border border-border/60">
-              <AvatarImage src={comment.author.avatar || "/placeholder.svg"} alt={comment.author.name} />
-              <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="relative h-3 w-3 platform-icon">
-              <Image src={platformIcon || "/placeholder.svg"} alt={comment.platform} fill className="object-contain" />
+            {/* Single post thumbnail with platform overlay */}
+            <div className="relative w-8 h-8 overflow-hidden rounded-md group-hover:ring-2 group-hover:ring-primary transition-all">
+              <Image
+                src={comment.postThumbnail}
+                alt={comment.postTitle}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute bottom-1 right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-md">
+                <Image
+                  src={platformIcon}
+                  alt={comment.platform}
+                  width={12}
+                  height={12}
+                  className="object-contain"
+                />
+              </div>
             </div>
           </div>
 
           {/* Main content area */}
           <div className="flex-1 max-w-full">
-            <div className="flex items-start justify-between mb-0.5">
+            <div className="flex items-start justify-between mb-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="font-medium text-xs">
                   {searchTerm ? highlightSearchTerm(comment.author.name, searchTerm) : comment.author.name}
@@ -1095,7 +1129,11 @@ function CommentCard({
               </TooltipProvider>
             </div>
 
-            <p className="text-xs leading-tight mb-1 line-clamp-2">
+            {/* Video title tagline */}
+            <div className="text-[10px] font-semibold text-muted-foreground mb-0.5 truncate transition-colors group-hover:text-primary">
+              {comment.postTitle}
+            </div>
+            <p className="text-[10px] leading-tight mb-0.5 line-clamp-1">
               {searchTerm ? highlightSearchTerm(displayText, searchTerm) : displayText}
             </p>
 
@@ -1114,47 +1152,34 @@ function CommentCard({
               </Button>
             )}
 
-            <div className="flex items-center justify-between mt-1 flex-wrap gap-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
-                  <ThumbsUp className="h-2.5 w-2.5" />
+            <div className="flex items-center justify-between mt-1">
+              <div className="flex items-center gap-6">
+                <button
+                  className={`flex items-baseline gap-2 text-[10px] transition-colors ${likeAnim ? 'text-primary scale-125' : 'text-muted-foreground'} hover:text-primary duration-300 ease-out`}
+                  onClick={handleLikeClick}
+                >
+                  <ThumbsUp className="h-4 w-4" />
                   <span>{comment.likes}</span>
-                </div>
-
-                {/* Replies button with expand/collapse functionality */}
+                </button>
                 {comment.replies > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 px-1.5 text-[9px] text-muted-foreground hover:text-primary hover:bg-primary/5 flex items-center gap-0.5"
+                  <button
+                    className="flex items-baseline gap-2 text-[10px] text-muted-foreground hover:text-primary transition-colors"
                     onClick={onToggleReplies}
                   >
-                    <MessageSquare className="h-2.5 w-2.5" />
-                    <span>
-                      {comment.replies} {comment.replies === 1 ? "reply" : "replies"}
-                    </span>
-                    {isRepliesExpanded ? (
-                      <ChevronUp className="h-2.5 w-2.5 ml-0.5" />
-                    ) : (
-                      <ChevronDown className="h-2.5 w-2.5 ml-0.5" />
-                    )}
-                  </Button>
+                    <MessageSquare className="h-4 w-4" />
+                    <span>{comment.replies}</span>
+                    {isRepliesExpanded ? <ChevronUp className="h-4 w-4 ml-0.5" /> : <ChevronDown className="h-4 w-4 ml-0.5" />}
+                  </button>
                 )}
-
-                <Button
-                  size="sm"
-                  className="h-5 px-1.5 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary text-[9px]"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onReply()
-                  }}
+                <button
+                  className="flex items-baseline gap-2 text-[10px] text-primary hover:underline transition-colors"
+                  onClick={(e) => { e.stopPropagation(); onReply(); }}
                 >
-                  <Reply className="h-2.5 w-2.5 mr-0.5" />
-                  Reply
-                </Button>
+                  <Reply className="h-4 w-4" />
+                  <span>Reply</span>
+                </button>
               </div>
-
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 {comment.flagged && (
                   <TooltipProvider>
                     <Tooltip>

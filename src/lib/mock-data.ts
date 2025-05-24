@@ -171,7 +171,7 @@ export const mockComments: Comment[] = [
     replies: 1,
     flagged: false,
     needsAttention: false,
-    archived: false,
+    archived: true,
     postId: "post3",
     postTitle: "Why I Switched to This Camera",
     postThumbnail: "/placeholder.svg?height=40&width=40",

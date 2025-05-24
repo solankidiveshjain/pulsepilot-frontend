@@ -1,12 +1,11 @@
 import type {
-  ApiComment,
-  BulkReplyRequest,
-  BulkReplyResponse,
-  CommentsResponse,
-  ListCommentsParams,
-  ReplyRequest,
-  ReplyResponse,
-  SuggestionsResponse
+    BulkReplyRequest,
+    BulkReplyResponse,
+    CommentsResponse,
+    ListCommentsParams,
+    ReplyRequest,
+    ReplyResponse,
+    SuggestionsResponse
 } from '@/components/comments/models/api'
 import { mockComments } from '@/lib/mock-data'
 import type { Comment, CommentReply, Pagination, Platform } from '@/types'
@@ -23,35 +22,7 @@ export async function listComments(
   params?: ListCommentsParams
 ): Promise<{ items: Comment[]; pagination: Pagination }> {
   if (useMock) {
-    const raw: ApiComment[] = mockComments.map((c) => ({
-      id: c.id,
-      postId: c.postId,
-      author: c.author.name,
-      message: c.text,
-      createdAt: new Date().toISOString(),
-      archived: c.archived,
-      flagged: c.flagged,
-      metadata: {},
-    }))
-    const items: Comment[] = raw.map((c) => ({
-      id: c.id,
-      author: { name: c.author, avatar: '' },
-      text: c.message,
-      platform: (c.metadata?.platform as Platform) ?? 'youtube',
-      time: c.createdAt,
-      timeTooltip: c.createdAt,
-      likes: 0,
-      replies: 0,
-      flagged: c.flagged,
-      needsAttention: false,
-      archived: c.archived,
-      postId: c.postId,
-      postTitle: '',
-      postThumbnail: '',
-      emotion: 'neutral',
-      sentiment: 'neutral',
-      category: 'general',
-    }))
+    const items: Comment[] = mockComments
     return Promise.resolve({
       items,
       pagination: {
