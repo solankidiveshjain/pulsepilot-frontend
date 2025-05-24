@@ -10,18 +10,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  images: {
-    unoptimized: true,
-    domains: ['placeholder.svg'],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placeholder.svg',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
+  images: {},
   serverExternalPackages: [],
   experimental: {
     optimizeCss: true,

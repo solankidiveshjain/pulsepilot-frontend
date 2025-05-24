@@ -1,95 +1,49 @@
-// @ts-nocheck
 "use client"
 
 import { ReplyDialog } from "@/components/dashboard/reply-dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar" // Keep Avatar related imports
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+// Input will be removed as it's now in FeedToolbar
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/hooks/use-toast"
-import type { Comment, FilterState } from "@/types"
+import type { Comment, FilterState, Platform, Emotion, Sentiment, Category, Status, ActiveFilter } from "@/types"
+import { FeedToolbar } from "./feed-toolbar"
+import { ActiveFiltersBar } from "./active-filters-bar"
+import { BulkActionsToolbar } from "./bulk-actions-toolbar" // Import BulkActionsToolbar
 import {
     AlertTriangle,
-    Archive,
-    BookmarkIcon,
+    // Archive, // Moved to BulkActionsToolbar
+    // BookmarkIcon, // Moved to BulkActionsToolbar
     Check,
     CheckCircle,
-    CheckSquare,
+    // CheckSquare, // Moved to BulkActionsToolbar
     ChevronDown,
     ChevronRight,
     ChevronUp,
     Clock,
-    Filter,
     Flag,
     MessageSquare,
     MoreHorizontal,
-    Reply,
-    Search,
-    Square,
+    // Reply, // Moved to BulkActionsToolbar
+    // Square, // Moved to BulkActionsToolbar
     Star,
     ThumbsUp,
     Trash,
-    X,
+    X, // Keep X (used elsewhere)
     Zap,
 } from "lucide-react"
 import Image from "next/image"
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react"
+import * as React from "react"
+// Removed useCallback and useEffect if no longer needed, added useMemo
+import { useEffect, useRef, useState, type MouseEvent, useMemo, useCallback } 
+import { CommentReplies } from "./comment-replies"
+import { CommentCard } from "@/components/comments/ui/comment-card"
 
-// Mock replies data
-const mockReplies = {
-  comment1: [
-    {
-      id: "reply1",
-      text: "Thank you for your feedback! We're working on improving that feature in our next update.",
-      author: {
-        name: "PulsePilot Support",
-        avatar: "/placeholder.svg?height=32&width=32",
-      },
-      time: "1 hour ago",
-      likes: 3,
-      isOfficial: true,
-    },
-    {
-      id: "reply2",
-      text: "I've had the same issue. Hope they fix it soon!",
-      author: {
-        name: "Jane Cooper",
-        avatar: "/placeholder.svg?height=32&width=32",
-      },
-      time: "45 minutes ago",
-      likes: 1,
-    },
-  ],
-  comment3: [
-    {
-      id: "reply3",
-      text: "We appreciate your enthusiasm! The new dashboard will be available to all users next week.",
-      author: {
-        name: "PulsePilot Support",
-        avatar: "/placeholder.svg?height=32&width=32",
-      },
-      time: "3 hours ago",
-      likes: 5,
-      isOfficial: true,
-    },
-  ],
-  comment7: [
-    {
-      id: "reply4",
-      text: "Thanks for reporting this. Our team is investigating the issue.",
-      author: {
-        name: "PulsePilot Support",
-        avatar: "/placeholder.svg?height=32&width=32",
-      },
-      time: "2 hours ago",
-      likes: 2,
-      isOfficial: true,
-    },
-  ],
-}
+// Define specific action types
+type CommentAction = "flag" | "archive" | "save" | "delete" | "important";
 
 // Sort options
 const sortOptions = [
@@ -99,183 +53,8 @@ const sortOptions = [
   { id: "unread", label: "Unread first", icon: <MessageSquare className="mr-2 h-3.5 w-3.5" /> },
 ]
 
-// Embedded CommentReplies component
-function CommentReplies({ commentId }: { commentId: string }) {
-  const [replies, setReplies] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const { toast } = useToast()
-
-  useEffect(() => {
-    // Simulate fetching replies
-    const timer = setTimeout(() => {
-      setReplies(mockReplies[commentId as keyof typeof mockReplies] || [])
-      setLoading(false)
-    }, 800)
-
-    return () => clearTimeout(timer)
-  }, [commentId])
-
-  return (
-    <div className="space-y-2 py-1">
-      {replies.length === 0 ? (
-        <div className="text-center py-3 text-sm text-muted-foreground">No replies yet</div>
-      ) : (
-        replies.map((reply) => (
-          <Card
-            key={reply.id}
-            className={`border-border/30 transition-all hover:border-border/60 ${reply.isOfficial ? "bg-primary/5" : ""}`}
-          >
-            <CardContent className="p-2">
-              <div className="flex gap-2">
-                <Avatar className="h-6 w-6 border border-border/60">
-                  <AvatarImage src={reply.author.avatar || "/placeholder.svg"} alt={reply.author.name} />
-                  <AvatarFallback>{reply.author.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-medium text-xs">{reply.author.name}</span>
-                      {reply.isOfficial && (
-                        <Badge className="h-4 px-1 text-[9px] bg-primary/10 text-primary flex items-center gap-0.5">
-                          <CheckCircle className="h-2 w-2" />
-                          <span>Official</span>
-                        </Badge>
-                      )}
-                    </div>
-                    <span className="text-[9px] text-muted-foreground">{reply.time}</span>
-                  </div>
-
-                  <p className="text-xs leading-tight mb-1">{reply.text}</p>
-
-                  <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
-                        <ThumbsUp className="h-3 w-3" />
-                        <span>{reply.likes}</span>
-                      </div>
-                    </div>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => e.stopPropagation()}>
-                          <MoreHorizontal className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" sideOffset={5} className="w-40 comment-menu">
-                        <DropdownMenuItem
-                          className="text-xs"
-                          onClick={(e) => {
-                            e.preventDefault()
-                          }}
-                        >
-                          <svg
-                            className="mr-2 h-3.5 w-3.5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                            />
-                          </svg>
-                          <span>Copy text</span>
-                        </DropdownMenuItem>
-                        {reply.isOfficial ? (
-                          <>
-                            <DropdownMenuItem
-                              className="text-xs"
-                              onClick={(e) => {
-                                e.preventDefault()
-                              }}
-                            >
-                              <svg
-                                className="mr-2 h-3.5 w-3.5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
-                              </svg>
-                              <span>Edit</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-xs text-destructive"
-                              onClick={(e) => {
-                                e.preventDefault()
-                              }}
-                            >
-                              <svg
-                                className="mr-2 h-3.5 w-3.5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                              <span>Delete</span>
-                            </DropdownMenuItem>
-                          </>
-                        ) : (
-                          <DropdownMenuItem
-                            className="text-xs"
-                            onClick={(e) => {
-                              e.preventDefault()
-                            }}
-                          >
-                            <svg
-                              className="mr-2 h-3.5 w-3.5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                              />
-                            </svg>
-                            <span>Report</span>
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))
-      )}
-    </div>
-  )
-}
-
-const platformColors = {
-  youtube: "platform-badge-youtube",
-  instagram: "platform-badge-instagram",
-  twitter: "platform-badge-twitter",
-  tiktok: "platform-badge-tiktok",
-  facebook: "platform-badge-facebook",
-  linkedin: "linkedin",
-}
+// platformIcons and emotionIcons are kept as they are used by ActiveFiltersBar
+// platformColors is removed as it was only used by the inline CommentCard
 
 const platformIcons = {
   youtube: "/youtube.svg",
@@ -310,19 +89,29 @@ export function CommentsFeed({
   onFilterChange: (newFilters: Partial<FilterState>) => void;
   isMobile?: boolean;
 }) {
+  // State for managing which comment is currently being replied to.
+  // Null if no reply composer is open.
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null)
-  const [searchValue, setSearchValue] = useState(filters.search || "")
+  const [searchValue, setSearchValue] = useState(filters.search ?? "")
+  // Stores an array of comment IDs that are selected for bulk actions.
   const [selectedComments, setSelectedComments] = useState<string[]>([])
+  // Controls the visibility of the dialog used for replying to multiple comments at once.
   const [bulkReplyOpen, setBulkReplyOpen] = useState(false)
+  // Indicates if additional comments are being loaded, e.g., for infinite scrolling.
   const [isLoading, setIsLoading] = useState(false)
+  // Tracks comment IDs whose full text is expanded (if truncated).
   const [expandedComments, setExpandedComments] = useState<string[]>([])
+  // Tracks comment IDs whose replies section is currently visible.
   const [expandedReplies, setExpandedReplies] = useState<string[]>([])
+  // Stores the current sorting criteria for the comments list (e.g., "recent", "popular").
   const [sortOption, setSortOption] = useState<string>("recent")
-  const [displayedComments, setDisplayedComments] = useState<Comment[]>([...initialComments])
   const feedRef = useRef<HTMLDivElement | null>(null)
   const { toast } = useToast()
 
-  // Helper function to convert time strings to minutes for sorting
+  /**
+   * Converts human-readable time strings (e.g., "1 hour ago", "2 days ago")
+   * into a numerical value in minutes for sorting purposes.
+   */
   const parseTimeToMinutes = (timeStr: string): number => {
     if (timeStr.includes("minute")) {
       return Number.parseInt(timeStr.split(" ")[0])
@@ -336,92 +125,98 @@ export function CommentsFeed({
     return 0
   }
 
-  // Function to apply filters and sorting
-  const applyFiltersAndSort = useCallback(() => {
-    let filteredComments = [...initialComments]
+  const displayedComments = useMemo(() => {
+    let filteredComments = [...initialComments];
 
     // Apply search filter
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase()
+      const searchLower = filters.search.toLowerCase();
       filteredComments = filteredComments.filter(
         (comment) =>
-          comment.text.toLowerCase().includes(searchLower) || comment.author.name.toLowerCase().includes(searchLower),
-      )
+          comment.text.toLowerCase().includes(searchLower) ||
+          comment.author.name.toLowerCase().includes(searchLower),
+      );
     }
 
     // Apply status filter
     if (filters.status && filters.status !== "all") {
       filteredComments = filteredComments.filter((comment) => {
-        if (filters.status === "flagged") return comment.flagged
-        if (filters.status === "attention") return comment.needsAttention
-        if (filters.status === "archived") return comment.archived
-        return true
-      })
+        if (filters.status === "flagged") return comment.flagged;
+        if (filters.status === "attention") return comment.needsAttention;
+        if (filters.status === "archived") return comment.archived;
+        return true;
+      });
     }
 
     // Apply platform filters
     if (filters.platforms && filters.platforms.length > 0) {
-      filteredComments = filteredComments.filter((comment) => filters.platforms.includes(comment.platform))
+      filteredComments = filteredComments.filter((comment) =>
+        filters.platforms.includes(comment.platform),
+      );
     }
 
     // Apply emotion filters
     if (filters.emotions && filters.emotions.length > 0) {
-      filteredComments = filteredComments.filter((comment) => filters.emotions.includes(comment.emotion))
+      filteredComments = filteredComments.filter((comment) =>
+        filters.emotions.includes(comment.emotion),
+      );
     }
 
     // Apply sentiment filters
     if (filters.sentiments && filters.sentiments.length > 0) {
-      filteredComments = filteredComments.filter((comment) => filters.sentiments.includes(comment.sentiment))
+      filteredComments = filteredComments.filter((comment) =>
+        filters.sentiments.includes(comment.sentiment),
+      );
     }
 
     // Apply category filters
     if (filters.categories && filters.categories.length > 0) {
-      filteredComments = filteredComments.filter((comment) => filters.categories.includes(comment.category))
+      filteredComments = filteredComments.filter((comment) =>
+        filters.categories.includes(comment.category),
+      );
     }
 
     // Apply sorting
-    const sortedComments = [...filteredComments]
-
+    const sortedComments = [...filteredComments];
     switch (sortOption) {
       case "recent":
         sortedComments.sort((a, b) => {
-          const aTime = parseTimeToMinutes(a.time)
-          const bTime = parseTimeToMinutes(b.time)
-          return aTime - bTime
-        })
-        break
+          const aTime = parseTimeToMinutes(a.time);
+          const bTime = parseTimeToMinutes(b.time);
+          return aTime - bTime;
+        });
+        break;
       case "oldest":
         sortedComments.sort((a, b) => {
-          const aTime = parseTimeToMinutes(a.time)
-          const bTime = parseTimeToMinutes(b.time)
-          return bTime - aTime
-        })
-        break
+          const aTime = parseTimeToMinutes(a.time);
+          const bTime = parseTimeToMinutes(b.time);
+          return bTime - aTime;
+        });
+        break;
       case "popular":
-        sortedComments.sort((a, b) => b.likes - a.likes)
-        break
+        sortedComments.sort((a, b) => b.likes - a.likes);
+        break;
       case "unread":
         sortedComments.sort((a, b) => {
-          if (a.replies === 0 && b.replies > 0) return -1
-          if (a.replies > 0 && b.replies === 0) return 1
-          return 0
-        })
-        break
+          if (a.replies === 0 && b.replies > 0) return -1;
+          if (a.replies > 0 && b.replies === 0) return 1;
+          return 0;
+        });
+        break;
       default:
-        break
+        break;
     }
+    return sortedComments;
+  }, [initialComments, filters, sortOption]);
 
-    setDisplayedComments(sortedComments)
-  }, [filters, sortOption, initialComments])
-
-  // Apply filters and sorting whenever filters or sort option changes
+  /**
+   * useEffect hook for handling keyboard navigation within the comments feed.
+   * Allows users to navigate between comments using ArrowUp/ArrowDown keys,
+   * open the reply dialog for the selected comment using Enter,
+   * and close the reply dialog using Escape.
+   */
   useEffect(() => {
-    applyFiltersAndSort()
-  }, [applyFiltersAndSort])
-
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: React.KeyboardEvent) => {
       if (!displayedComments.length) return
 
       // Find current index
@@ -436,7 +231,10 @@ export function CommentsFeed({
         const prevIndex = currentIndex > 0 ? currentIndex - 1 : displayedComments.length - 1
         onCommentSelect(displayedComments[prevIndex])
       } else if (
-        e.key === "Enter" && document.activeElement?.tagName !== "INPUT" && selectedComment
+        e.key === "Enter" &&
+        typeof document !== "undefined" && // Add check for document
+        document.activeElement?.tagName !== "INPUT" &&
+        selectedComment
       ) {
         e.preventDefault()
         setReplyingTo(selectedComment)
@@ -448,8 +246,8 @@ export function CommentsFeed({
       }
     }
 
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown as EventListener)
+    return () => window.removeEventListener("keydown", handleKeyDown as EventListener)
   }, [displayedComments, selectedComment, onCommentSelect, replyingTo])
 
   const handleReply = useCallback((comment: Comment) => {
@@ -474,10 +272,10 @@ export function CommentsFeed({
   }, [onFilterChange, filters])
 
   const clearFilter = useCallback(
-    (filterType: keyof FilterState, filterId: string) => {
-      const currentFilters = (filters[filterType] as unknown as string[]) || []
-      const newFilters = currentFilters.filter((id: string) => id !== filterId)
-      onFilterChange({ ...filters, [filterType]: newFilters })
+    (filterType: keyof FilterState, filterValue: string) => {
+      const currentFilterValues = filters[filterType] as string[] | undefined;
+      const newFilterValues = currentFilterValues ? currentFilterValues.filter((id: string) => id !== filterValue) : [];
+      onFilterChange({ ...filters, [filterType]: newFilterValues })
     },
     [filters, onFilterChange],
   )
@@ -494,7 +292,7 @@ export function CommentsFeed({
     setSearchValue("")
   }, [onFilterChange])
 
-  const toggleCommentSelection = useCallback((commentId) => {
+  const toggleCommentSelection = useCallback((commentId: string) => {
     setSelectedComments((prev) => {
       if (prev.includes(commentId)) {
         return prev.filter((id) => id !== commentId)
@@ -539,7 +337,7 @@ export function CommentsFeed({
   }, [selectedComments, toast])
 
   // Toggle expanded state for a comment
-  const toggleExpandComment = useCallback((commentId) => {
+  const toggleExpandComment = useCallback((commentId: string) => {
     setExpandedComments((prev) => {
       if (prev.includes(commentId)) {
         return prev.filter((id) => id !== commentId)
@@ -550,7 +348,7 @@ export function CommentsFeed({
   }, [])
 
   // Toggle expanded replies for a comment
-  const toggleExpandReplies = useCallback((commentId, e) => {
+  const toggleExpandReplies = useCallback((commentId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     setExpandedReplies((prev) => {
       if (prev.includes(commentId)) {
@@ -561,17 +359,18 @@ export function CommentsFeed({
     })
   }, [])
 
+  // Define a type for actionMessages
+  const actionMessages: Record<CommentAction, string> = {
+    flag: "Comment flagged for review",
+    archive: "Comment archived",
+    save: "Comment saved for later",
+    delete: "Comment deleted",
+    important: "Comment marked as important",
+  };
+
   // Handle comment actions with toast notifications
   const handleCommentAction = useCallback(
-    (action, commentId) => {
-      const actionMessages = {
-        flag: "Comment flagged for review",
-        archive: "Comment archived",
-        save: "Comment saved for later",
-        delete: "Comment deleted",
-        important: "Comment marked as important",
-      }
-
+    (action: CommentAction, commentId: string) => {
       toast({
         title: actionMessages[action] || "Action completed",
         description: `Comment ID: ${commentId.substring(0, 8)}...`,
@@ -583,57 +382,26 @@ export function CommentsFeed({
 
   // Handle sort option selection
   const handleSortChange = useCallback(
-    (sortId) => {
-      // Update the sort option state
+    (sortId: string) => {
       setSortOption(sortId)
-
-      // Apply sorting directly to the current filtered comments
-      const sortedComments = [...displayedComments]
-
-      switch (sortId) {
-        case "recent":
-          sortedComments.sort((a, b) => {
-            const aTime = parseTimeToMinutes(a.time)
-            const bTime = parseTimeToMinutes(b.time)
-            return aTime - bTime
-          })
-          break
-        case "oldest":
-          sortedComments.sort((a, b) => {
-            const aTime = parseTimeToMinutes(a.time)
-            const bTime = parseTimeToMinutes(b.time)
-            return bTime - aTime
-          })
-          break
-        case "popular":
-          sortedComments.sort((a, b) => b.likes - a.likes)
-          break
-        case "unread":
-          sortedComments.sort((a, b) => {
-            if (a.replies === 0 && b.replies > 0) return -1
-            if (a.replies > 0 && b.replies === 0) return 1
-            return 0
-          })
-          break
-        default:
-          break
-      }
-
-      // Update the displayed comments with the sorted results
-      setDisplayedComments(sortedComments)
-
+      // No longer need to manually setDisplayedComments here, useMemo will handle it.
       toast({
         title: "Comments sorted",
         description: `Sorted by ${sortOptions.find((opt) => opt.id === sortId)?.label}`,
         variant: "default",
       })
     },
-    [displayedComments, toast],
+    [toast], // displayedComments is removed from dependencies
   )
 
   // Define loadMoreComments before handleScroll
+  /**
+   * Placeholder function to simulate loading more comments for infinite scroll.
+   * Currently, it just sets an isLoading state for 1.5 seconds.
+   * It also has a hardcoded limit of not "loading" more if 50 comments are already displayed.
+   */
   const loadMoreComments = useCallback(() => {
-    if (displayedComments.length >= 50) return // Don't load more if we already have 50 comments
+    if (displayedComments.length >= 50) return 
 
     setIsLoading(true)
     // Simulate loading more comments
@@ -644,9 +412,9 @@ export function CommentsFeed({
 
   // Now handleScroll can safely reference loadMoreComments
   const handleScroll = useCallback(
-    (e) => {
-      const { scrollTop, scrollHeight, clientHeight } = e.target
-      if (scrollHeight - scrollTop <= clientHeight * 1.5 && !isLoading) {
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+      if (scrollHeight - scrollTop <= clientHeight * 1.5 && !isLoading && loadMoreComments) { // Added null check for loadMoreComments
         loadMoreComments()
       }
     },
@@ -674,198 +442,83 @@ export function CommentsFeed({
   //   }, 1500)
   // }, [displayedComments.length])
 
-  // Get all active filters
-  const activeFilters = []
+  // Transforms the `filters` prop into an array of `ActiveFilter` objects
+  // suitable for display by the `ActiveFiltersBar` component.
+  const activeFilters: ActiveFilter[] = []
 
   if (filters.status && filters.status !== "all") {
     activeFilters.push({
       type: "status",
-      id: filters.status,
+      id: filters.status, // id is already a string here (Status type)
       label: filters.status.charAt(0).toUpperCase() + filters.status.slice(1),
-    })
+      // No icon for status type based on current structure
+    });
   }
 
-  filters.platforms?.forEach((platform) => {
-    const platformInfo = {
+  filters.platforms?.forEach((platform: Platform) => {
+    activeFilters.push({
       type: "platforms",
       id: platform,
       label: platform.charAt(0).toUpperCase() + platform.slice(1),
       icon: platformIcons[platform],
-    }
-    activeFilters.push(platformInfo)
+    });
   })
 
-  filters.emotions?.forEach((emotion) => {
+  filters.emotions?.forEach((emotion: Emotion) => {
     activeFilters.push({
       type: "emotions",
       id: emotion,
       label: emotion.charAt(0).toUpperCase() + emotion.slice(1),
       icon: emotionIcons[emotion],
-    })
+    });
   })
 
-  filters.sentiments?.forEach((sentiment) => {
+  filters.sentiments?.forEach((sentiment: Sentiment) => {
     activeFilters.push({
       type: "sentiments",
       id: sentiment,
       label: sentiment.charAt(0).toUpperCase() + sentiment.slice(1),
-    })
+      // No icon for sentiment type based on current structure
+    });
   })
 
-  filters.categories?.forEach((category) => {
+  filters.categories?.forEach((category: Category) => {
     activeFilters.push({
       type: "categories",
       id: category,
       label: category.charAt(0).toUpperCase() + category.slice(1),
-    })
+      // No icon for category type based on current structure
+    });
   })
 
   return (
     <div className="h-full flex flex-col" ref={feedRef}>
-      {/* Search and Sort Bar */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border/30 p-2">
-        <div className="flex items-center justify-between gap-2">
-          <form onSubmit={handleSearch} className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search comments..."
-              className="pl-8 pr-8 h-8 bg-background border-border/60 text-xs"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={(e) => {
-                // Prevent Enter key from triggering reply
-                if (e.key === "Enter") {
-                  e.stopPropagation()
-                }
-              }}
-            />
-            {searchValue && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                onClick={clearSearch}
-              >
-                <X className="h-3 w-3" />
-                <span className="sr-only">Clear search</span>
-              </Button>
-            )}
-          </form>
+      <FeedToolbar
+        searchValue={searchValue}
+        onSearchValueChange={setSearchValue}
+        onSearchSubmit={handleSearch}
+        onClearSearch={clearSearch}
+        sortOption={sortOption}
+        sortOptions={sortOptions}
+        onSortChange={handleSortChange}
+      />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 text-xs">
-                <span>Sort: {sortOptions.find((opt) => opt.id === sortOption)?.label}</span>
-                <ChevronDown className="ml-1 h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {sortOptions.map((option) => (
-                <DropdownMenuItem
-                  key={option.id}
-                  className="flex items-center gap-1 text-xs cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    handleSortChange(option.id)
-                  }}
-                  onSelect={(e) => {
-                    e.preventDefault()
-                  }}
-                >
-                  {option.icon}
-                  {option.label}
-                  {sortOption === option.id && <Check className="ml-auto h-3.5 w-3.5 text-primary" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+      <ActiveFiltersBar
+        activeFilters={activeFilters}
+        onClearFilter={clearFilter}
+        onClearAllFilters={clearAllFilters}
+      />
 
-      {/* Active Filters */}
-      {activeFilters.length > 0 && (
-        <div className="flex flex-wrap gap-1 p-2 animate-fade-in border-b border-border/30">
-          <div className="flex items-center gap-1 mr-1">
-            <Filter className="h-3 w-3 text-primary" />
-            <span className="text-[10px] font-medium">Filters:</span>
-          </div>
-
-          {activeFilters.map((filter) => (
-            <div key={`${filter.type}-${filter.id}`} className="filter-pill">
-              {filter.icon &&
-                (typeof filter.icon === "string" ? (
-                  <span>{filter.icon}</span>
-                ) : (
-                  <div className="relative h-3 w-3">
-                    <Image src={filter.icon || "/placeholder.svg"} alt={filter.label} fill className="object-contain" />
-                  </div>
-                ))}
-              <span>{filter.label}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-3 w-3 p-0 ml-1 hover:bg-primary/20"
-                onClick={() => clearFilter(filter.type, filter.id)}
-              >
-                <X className="h-2 w-2" />
-                <span className="sr-only">Remove {filter.label} filter</span>
-              </Button>
-            </div>
-          ))}
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[10px] h-5 px-1.5 hover:bg-primary/10"
-            onClick={clearAllFilters}
-          >
-            Clear all
-          </Button>
-        </div>
-      )}
-
-      {/* Bulk Actions Bar */}
-      {selectedComments.length > 0 && (
-        <div className="bulk-action-bar">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={toggleSelectAll}>
-              {selectedComments.length === displayedComments.length ? (
-                <CheckSquare className="h-4 w-4 text-primary" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
-            </Button>
-            <span className="text-xs font-medium">{selectedComments.length} selected</span>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto">
-            <Button variant="outline" size="sm" className="h-7 text-xs whitespace-nowrap" onClick={handleBulkReply}>
-              <Reply className="mr-1 h-3.5 w-3.5" />
-              Bulk Reply
-            </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs whitespace-nowrap" onClick={handleBulkArchive}>
-              <Archive className="mr-1 h-3.5 w-3.5" />
-              Archive
-            </Button>
-            {!isMobile && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs whitespace-nowrap"
-                onClick={handleBulkSaveForLater}
-              >
-                <BookmarkIcon className="mr-1 h-3.5 w-3.5" />
-                Save for Later
-              </Button>
-            )}
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setSelectedComments([])}>
-              <X className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <BulkActionsToolbar
+        selectedCommentsCount={selectedComments.length}
+        totalCommentsInFeed={displayedComments.length}
+        onToggleSelectAll={toggleSelectAll}
+        onBulkReply={handleBulkReply}
+        onBulkArchive={handleBulkArchive}
+        onBulkSaveForLater={handleBulkSaveForLater}
+        onClearSelection={() => setSelectedComments([])}
+        isMobile={isMobile}
+      />
 
       {/* Comments Feed - Vertical Scroll Only */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1" onScroll={handleScroll}>
@@ -888,10 +541,10 @@ export function CommentsFeed({
                 onReply={() => handleReply(comment)}
                 onToggleSelect={() => toggleCommentSelection(comment.id)}
                 onToggleExpand={() => toggleExpandComment(comment.id)}
-                onToggleReplies={(e) => toggleExpandReplies(comment.id, e)}
-                onAction={(action) => handleCommentAction(action, comment.id)}
+                onToggleReplies={(e) => toggleExpandReplies(comment.id, e as React.MouseEvent)}
+                onAction={(action) => handleCommentAction(action, comment.id)} // Standalone card uses CommentAction directly
                 isMobile={isMobile}
-                searchTerm={filters.search}
+                searchTerm={filters.search ?? ""}
               />
 
               {/* Expanded Replies */}
@@ -913,372 +566,42 @@ export function CommentsFeed({
 
       {replyingTo && <ReplyDialog comment={replyingTo} onClose={handleCloseReply} selectedComments={[]} />}
 
-      {bulkReplyOpen && (
-        <ReplyDialog
-          comment={{
-            text: `Replying to ${selectedComments.length} comments`,
-            author: { name: "Multiple Recipients" },
-            platform: displayedComments.find((c) => selectedComments.includes(c.id))?.platform || "youtube",
-          }}
-          onClose={() => {
-            setBulkReplyOpen(false)
-            setSelectedComments([])
-          }}
-          isBulkReply={true}
-          selectedComments={selectedComments}
-        />
-      )}
+      {bulkReplyOpen && (() => {
+        const bulkReplyTargetComment = displayedComments.find((c) => selectedComments.includes(c.id));
+        const platformForBulkReply = bulkReplyTargetComment?.platform || "youtube";
+        
+        // For bulk replies, a dummy/partial Comment object is constructed.
+        // This provides necessary context (like platform) to the ReplyDialog
+        // without representing a single, specific comment.
+        return (
+          <ReplyDialog
+            comment={{ 
+              id: `bulk-reply-${Date.now()}`, 
+              author: { name: "Multiple Recipients", avatar: "" }, 
+              text: `Replying to ${selectedComments.length} comments`,
+              platform: platformForBulkReply,
+              time: new Date().toISOString(), 
+              likes: 0,
+              replies: 0,
+              flagged: false,
+              needsAttention: false,
+              archived: false,
+              postId: "",
+              postTitle: "",
+              postThumbnail: "",
+              emotion: "neutral",
+              sentiment: "neutral",
+              category: "general",
+            }}
+            onClose={() => {
+              setBulkReplyOpen(false)
+              setSelectedComments([])
+            }}
+            isBulkReply={true}
+            selectedComments={selectedComments}
+          />
+        );
+      })()}
     </div>
-  )
-}
-
-function CommentCard({
-  comment,
-  isSelected,
-  isChecked,
-  isExpanded,
-  isRepliesExpanded,
-  onSelect,
-  onReply,
-  onToggleSelect,
-  onToggleReplies,
-  onAction,
-  isMobile = false,
-  onToggleExpand,
-  searchTerm = "",
-}: {
-  comment: Comment
-  isSelected: boolean
-  isChecked: boolean
-  isExpanded: boolean
-  isRepliesExpanded: boolean
-  onSelect: () => void
-  onReply: () => void
-  onToggleSelect: () => void
-  onToggleReplies: (e: MouseEvent<HTMLButtonElement>) => void
-  onAction: (action: string) => void
-  isMobile?: boolean
-  onToggleExpand: () => void
-  searchTerm?: string
-}) {
-  const platformColors = {
-    youtube: "platform-badge-youtube",
-    instagram: "platform-badge-instagram",
-    twitter: "platform-badge-twitter",
-    tiktok: "platform-badge-tiktok",
-    facebook: "platform-badge-facebook",
-    linkedin: "linkedin",
-  }
-
-  const platformIcons = {
-    youtube: "/youtube.svg",
-    instagram: "/instagram.svg",
-    twitter: "/twitter.svg",
-    tiktok: "/tiktok.svg",
-    facebook: "/facebook.svg",
-    linkedin: "/linkedin.svg",
-  }
-
-  const emotionIcons = {
-    excited: "🤩",
-    angry: "😡",
-    curious: "🤔",
-    happy: "😊",
-    sad: "😢",
-    neutral: "😐",
-  }
-
-  const { toast } = useToast()
-
-  // Check if comment text is long enough to need truncation
-  const needsTruncation = comment.text.length > 180
-  const displayText = isExpanded || !needsTruncation ? comment.text : comment.text.slice(0, 180) + "..."
-
-  // Check if comment is AI-generated (for demo purposes)
-  const isAiGenerated = comment.id === "comment1" || comment.id === "comment7" || comment.id === "comment4"
-
-  // Highlight search term in text if present
-  const highlightSearchTerm = (text, term) => {
-    if (!term) return text
-
-    const parts = text.split(new RegExp(`(${term})`, "gi"))
-    return parts.map((part, i) =>
-      part.toLowerCase() === term.toLowerCase() ? (
-        <span key={i} className="bg-yellow-200 dark:bg-yellow-800">
-          {part}
-        </span>
-      ) : (
-        part
-      ),
-    )
-  }
-
-  const handleDropdownAction = (action) => {
-    // Stop event propagation and prevent default behavior
-    onAction(action)
-
-    // Show toast notification for the action
-    const actionMessages = {
-      important: "Comment marked as important",
-      flag: "Comment flagged for review",
-      archive: "Comment archived",
-      save: "Comment saved for later",
-      delete: "Comment deleted",
-    }
-
-    toast({
-      title: actionMessages[action] || "Action completed",
-      description: `Comment ID: ${comment.id.substring(0, 8)}...`,
-      variant: "default",
-    })
-  }
-
-  const platformIcon = platformIcons[comment.platform] || "/placeholder.svg"
-
-  // Local animation state for Like button
-  const [likeAnim, setLikeAnim] = useState(false)
-  const handleLikeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation()
-    setLikeAnim(true)
-    setTimeout(() => setLikeAnim(false), 300)
-  }
-
-  return (
-    <Card
-      className={`comment-card-compact group cursor-pointer transform transition-all hover:shadow-lg hover:-translate-y-0.5 hover:border-primary ${
-        isSelected ? "comment-card-selected active-comment border-primary" : ""
-      }`}
-      onClick={onSelect}
-    >
-      <CardContent className="p-1">
-        <div className="flex gap-2">
-          {/* Left column: Selection & thumbnail */}
-          <div className="flex flex-col items-center gap-1 w-12 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-4 w-4 p-0 rounded-sm"
-              onClick={(e) => {
-                e.stopPropagation()
-                onToggleSelect()
-              }}
-            >
-              {isChecked ? <CheckSquare className="h-3 w-3 text-primary" /> : <Square className="h-3 w-3" />}
-            </Button>
-            {/* Single post thumbnail with platform overlay */}
-            <div className="relative w-8 h-8 overflow-hidden rounded-md group-hover:ring-2 group-hover:ring-primary transition-all">
-              <Image
-                src={comment.postThumbnail}
-                alt={comment.postTitle}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute bottom-1 right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-md">
-                <Image
-                  src={platformIcon}
-                  alt={comment.platform}
-                  width={12}
-                  height={12}
-                  className="object-contain"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Main content area */}
-          <div className="flex-1 max-w-full">
-            <div className="flex items-start justify-between mb-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-medium text-xs">
-                  {searchTerm ? highlightSearchTerm(comment.author.name, searchTerm) : comment.author.name}
-                </span>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge className="h-4 px-1 text-[9px] flex items-center gap-0.5">
-                        <span>{emotionIcons[comment.emotion]}</span>
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      {comment.emotion.charAt(0).toUpperCase() + comment.emotion.slice(1)}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                {isAiGenerated && (
-                  <Badge className="h-4 px-1 text-[9px] bg-purple-500/10 text-purple-500 flex items-center gap-0.5 ai-pulse">
-                    <Zap className="h-2 w-2" />
-                    <span>AI</span>
-                  </Badge>
-                )}
-              </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
-                      <span>{comment.time}</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {comment.time === "2 hours ago"
-                      ? "Today at 1:45 PM"
-                      : comment.time === "5 hours ago"
-                        ? "Today at 10:30 AM"
-                        : "Yesterday at 3:15 PM"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-            {/* Video title tagline */}
-            <div className="text-[10px] font-semibold text-muted-foreground mb-0.5 truncate transition-colors group-hover:text-primary">
-              {comment.postTitle}
-            </div>
-            <p className="text-[10px] leading-tight mb-0.5 line-clamp-1">
-              {searchTerm ? highlightSearchTerm(displayText, searchTerm) : displayText}
-            </p>
-
-            {needsTruncation && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 px-1 py-0 text-[9px] text-primary hover:bg-primary/5"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onToggleExpand()
-                }}
-              >
-                {isExpanded ? "Show less" : "See more"}
-                <ChevronRight className={`h-2.5 w-2.5 ml-0.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-              </Button>
-            )}
-
-            <div className="flex items-center justify-between mt-1">
-              <div className="flex items-center gap-6">
-                <button
-                  className={`flex items-baseline gap-2 text-[10px] transition-colors ${likeAnim ? 'text-primary scale-125' : 'text-muted-foreground'} hover:text-primary duration-300 ease-out`}
-                  onClick={handleLikeClick}
-                >
-                  <ThumbsUp className="h-4 w-4" />
-                  <span>{comment.likes}</span>
-                </button>
-                {comment.replies > 0 && (
-                  <button
-                    className="flex items-baseline gap-2 text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                    onClick={onToggleReplies}
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>{comment.replies}</span>
-                    {isRepliesExpanded ? <ChevronUp className="h-4 w-4 ml-0.5" /> : <ChevronDown className="h-4 w-4 ml-0.5" />}
-                  </button>
-                )}
-                <button
-                  className="flex items-baseline gap-2 text-[10px] text-primary hover:underline transition-colors"
-                  onClick={(e) => { e.stopPropagation(); onReply(); }}
-                >
-                  <Reply className="h-4 w-4" />
-                  <span>Reply</span>
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                {comment.flagged && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge variant="destructive" className="text-[9px] h-4 px-1 animate-pulse-slow">
-                          <Flag className="h-2.5 w-2.5 mr-0.5" />
-                          Flagged
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">
-                        This comment has been flagged for review
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-                {comment.needsAttention && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge className="text-[9px] bg-yellow-500 hover:bg-yellow-600 h-4 px-1 animate-pulse-slow">
-                          <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
-                          Attention
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">
-                        This comment needs your attention
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => e.stopPropagation()}>
-                      <MoreHorizontal className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" sideOffset={5} className="w-40 comment-menu">
-                    <DropdownMenuItem
-                      className="text-xs group"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleDropdownAction("important")
-                      }}
-                    >
-                      <Star className="mr-2 h-3 w-3 transition-colors group-hover:text-yellow-500" />
-                      <span>Mark as important</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-xs group"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleDropdownAction("flag")
-                      }}
-                    >
-                      <Flag className="mr-2 h-3 w-3 transition-colors group-hover:text-red-500" />
-                      <span>Flag comment</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-xs group"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleDropdownAction("archive")
-                      }}
-                    >
-                      <Archive className="mr-2 h-3 w-3" />
-                      <span>Archive</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-xs group"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleDropdownAction("save")
-                      }}
-                    >
-                      <BookmarkIcon className="mr-2 h-3 w-3 transition-colors group-hover:text-blue-500" />
-                      <span>Save for later</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-xs text-destructive group"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        handleDropdownAction("delete")
-                      }}
-                    >
-                      <Trash className="mr-2 h-3 w-3 transition-colors group-hover:text-red-600" />
-                      <span>Delete</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   )
 }

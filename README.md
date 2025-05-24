@@ -135,7 +135,12 @@ Example: `feat(auth): add social login functionality`
 
 ## Testing
 
-Testing scripts are not yet configured.
+The project is configured with unit/integration tests using Jest and React Testing Library, and end-to-end tests using Playwright.
+
+-   Run unit/integration tests: `npm test`
+-   Run end-to-end tests: `npm run test:e2e`
+
+These tests are also executed as part of the CI pipeline.
 
 ## Production Build
 
