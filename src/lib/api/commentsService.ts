@@ -1,18 +1,18 @@
 import type {
-    BulkReplyRequest,
-    BulkReplyResponse,
-    CommentsResponse,
-    ListCommentsParams,
-    ReplyRequest,
-    ReplyResponse,
-    SuggestionsResponse
-} from '@/components/comments/models/api'
-import { mockComments } from '@/lib/mock-data'
-import type { Comment, CommentReply, Pagination, Platform } from '@/types'
-import { get, post } from './apiClient'
-import { useMock } from './config'
+  BulkReplyRequest,
+  BulkReplyResponse,
+  CommentsResponse,
+  ListCommentsParams,
+  ReplyRequest,
+  ReplyResponse,
+  SuggestionsResponse,
+} from "@/components/comments/models/api";
+import { mockComments, mockReplies } from "@/lib/mock-data";
+import type { Comment, CommentReply, Pagination, Platform } from "@/types";
+import { get, post } from "./apiClient";
+import { useMock } from "./config";
 
-type ParamsRecord = Record<string, string | number | boolean>
+type ParamsRecord = Record<string, string | number | boolean>;
 
 /**
  * Fetch list of comments for a team, mapping API raw to UI Comment
@@ -22,7 +22,7 @@ export async function listComments(
   params?: ListCommentsParams
 ): Promise<{ items: Comment[]; pagination: Pagination }> {
   if (useMock) {
-    const items: Comment[] = mockComments
+    const items: Comment[] = mockComments;
     return Promise.resolve({
       items,
       pagination: {
@@ -31,18 +31,15 @@ export async function listComments(
         totalItems: items.length,
         totalPages: 1,
       },
-    })
+    });
   }
 
-  const rawData = await get<CommentsResponse>(
-    `/teams/${teamId}/comments`,
-    params as ParamsRecord
-  )
+  const rawData = await get<CommentsResponse>(`/teams/${teamId}/comments`, params as ParamsRecord);
   const items: Comment[] = rawData.items.map((c) => ({
     id: c.id,
-    author: { name: c.author, avatar: '' },
+    author: { name: c.author, avatar: "" },
     text: c.message,
-    platform: (c.metadata?.platform as Platform) ?? 'youtube',
+    platform: (c.metadata?.platform as Platform) ?? "youtube",
     time: c.createdAt,
     timeTooltip: c.createdAt,
     likes: 0,
@@ -51,13 +48,13 @@ export async function listComments(
     needsAttention: false,
     archived: c.archived,
     postId: c.postId,
-    postTitle: '',
-    postThumbnail: '',
-    emotion: 'neutral',
-    sentiment: 'neutral',
-    category: 'general',
-  }))
-  return { items, pagination: rawData.pagination }
+    postTitle: "",
+    postThumbnail: "",
+    emotion: "neutral",
+    sentiment: "neutral",
+    category: "general",
+  }));
+  return { items, pagination: rawData.pagination };
 }
 
 /**
@@ -69,28 +66,25 @@ export async function replyToComment(
   body: ReplyRequest
 ): Promise<CommentReply> {
   if (useMock) {
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
     return Promise.resolve({
       id: `mock-reply-${Math.random().toString(36).substr(2, 9)}`,
-      author: { name: 'Mock User', avatar: '' },
+      author: { name: "Mock User", avatar: "" },
       text: body.message,
       time: now,
       timeTooltip: now,
       likes: 0,
-    })
+    });
   }
-  const raw = await post<ReplyResponse>(
-    `/teams/${teamId}/comments/${commentId}/reply`,
-    body
-  )
+  const raw = await post<ReplyResponse>(`/teams/${teamId}/comments/${commentId}/reply`, body);
   return {
     id: raw.id,
-    author: { name: 'You', avatar: '' },
+    author: { name: "You", avatar: "" },
     text: raw.message,
     time: raw.createdAt,
     timeTooltip: raw.createdAt,
     likes: 0,
-  }
+  };
 }
 
 /**
@@ -101,14 +95,11 @@ export async function bulkReplyComments(
   body: BulkReplyRequest
 ): Promise<BulkReplyResponse> {
   if (useMock) {
-    const results = body.commentIds.map((id) => ({ commentId: id, status: 'success' }))
-    return Promise.resolve({ results })
+    const results = body.commentIds.map((id) => ({ commentId: id, status: "success" }));
+    return Promise.resolve({ results });
   }
 
-  return post<BulkReplyResponse>(
-    `/teams/${teamId}/comments/bulk-reply`,
-    body
-  )
+  return post<BulkReplyResponse>(`/teams/${teamId}/comments/bulk-reply`, body);
 }
 
 /**
@@ -122,13 +113,26 @@ export async function getReplySuggestions(
     return Promise.resolve({
       commentId,
       suggestions: [
-        { id: 's1', text: 'Thank you for your feedback!', score: 1 },
-        { id: 's2', text: 'We appreciate your comment and will take it into consideration.', score: 1 }
-      ]
-    })
+        { id: "s1", text: "Thank you for your feedback!", score: 1 },
+        {
+          id: "s2",
+          text: "We appreciate your comment and will take it into consideration.",
+          score: 1,
+        },
+      ],
+    });
   }
 
-  return get<SuggestionsResponse>(
-    `/teams/${teamId}/comments/${commentId}/suggestions`
-  )
+  return get<SuggestionsResponse>(`/teams/${teamId}/comments/${commentId}/suggestions`);
+}
+
+/**
+ * Fetch replies for a specific comment
+ */
+export async function getReplies(teamId: string, commentId: string): Promise<CommentReply[]> {
+  if (useMock) {
+    return mockReplies[commentId] || [];
+  }
+  // Replace with actual API endpoint when available
+  return get<CommentReply[]>(`/teams/${teamId}/comments/${commentId}/replies`);
 }

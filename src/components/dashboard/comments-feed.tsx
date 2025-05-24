@@ -1,46 +1,25 @@
-"use client"
+"use client";
 
-import { ReplyDialog } from "@/components/dashboard/reply-dialog"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar" // Keep Avatar related imports
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ReplyDialog } from "@/components/dashboard/reply-dialog";
 // Input will be removed as it's now in FeedToolbar
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useToast } from "@/hooks/use-toast"
-import type { Comment, FilterState, Platform, Emotion, Sentiment, Category, Status, ActiveFilter } from "@/types"
-import { FeedToolbar } from "./feed-toolbar"
-import { ActiveFiltersBar } from "./active-filters-bar"
-import { BulkActionsToolbar } from "./bulk-actions-toolbar" // Import BulkActionsToolbar
-import {
-    AlertTriangle,
-    // Archive, // Moved to BulkActionsToolbar
-    // BookmarkIcon, // Moved to BulkActionsToolbar
-    Check,
-    CheckCircle,
-    // CheckSquare, // Moved to BulkActionsToolbar
-    ChevronDown,
-    ChevronRight,
-    ChevronUp,
-    Clock,
-    Flag,
-    MessageSquare,
-    MoreHorizontal,
-    // Reply, // Moved to BulkActionsToolbar
-    // Square, // Moved to BulkActionsToolbar
-    Star,
-    ThumbsUp,
-    Trash,
-    X, // Keep X (used elsewhere)
-    Zap,
-} from "lucide-react"
-import Image from "next/image"
-import * as React from "react"
-// Removed useCallback and useEffect if no longer needed, added useMemo
-import { useEffect, useRef, useState, type MouseEvent, useMemo, useCallback } 
-import { CommentReplies } from "./comment-replies"
-import { CommentCard } from "@/components/comments/ui/comment-card"
+import { CommentCard } from "@/components/comments/ui/comment-card";
+import { useToast } from "@/hooks/use-toast";
+import type {
+  ActiveFilter,
+  Category,
+  Comment,
+  Emotion,
+  FilterState,
+  Platform,
+  Sentiment,
+} from "@/types";
+import { Clock, MessageSquare, ThumbsUp } from "lucide-react";
+import * as React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActiveFiltersBar } from "./active-filters-bar";
+import { BulkActionsToolbar } from "./bulk-actions-toolbar"; // Import BulkActionsToolbar
+import { CommentReplies } from "./comment-replies";
+import { FeedToolbar } from "./feed-toolbar";
 
 // Define specific action types
 type CommentAction = "flag" | "archive" | "save" | "delete" | "important";
@@ -51,7 +30,7 @@ const sortOptions = [
   { id: "oldest", label: "Oldest", icon: <Clock className="mr-2 h-3.5 w-3.5 rotate-180" /> },
   { id: "popular", label: "Popular", icon: <ThumbsUp className="mr-2 h-3.5 w-3.5" /> },
   { id: "unread", label: "Unread first", icon: <MessageSquare className="mr-2 h-3.5 w-3.5" /> },
-]
+];
 
 // platformIcons and emotionIcons are kept as they are used by ActiveFiltersBar
 // platformColors is removed as it was only used by the inline CommentCard
@@ -63,7 +42,7 @@ const platformIcons = {
   tiktok: "/tiktok.svg",
   facebook: "/facebook.svg",
   linkedin: "/linkedin.svg",
-}
+};
 
 const emotionIcons = {
   excited: "🤩",
@@ -72,7 +51,7 @@ const emotionIcons = {
   happy: "😊",
   sad: "😢",
   neutral: "😐",
-}
+};
 
 export function CommentsFeed({
   comments: initialComments,
@@ -91,22 +70,22 @@ export function CommentsFeed({
 }) {
   // State for managing which comment is currently being replied to.
   // Null if no reply composer is open.
-  const [replyingTo, setReplyingTo] = useState<Comment | null>(null)
-  const [searchValue, setSearchValue] = useState(filters.search ?? "")
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
+  const [searchValue, setSearchValue] = useState(filters.search ?? "");
   // Stores an array of comment IDs that are selected for bulk actions.
-  const [selectedComments, setSelectedComments] = useState<string[]>([])
+  const [selectedComments, setSelectedComments] = useState<string[]>([]);
   // Controls the visibility of the dialog used for replying to multiple comments at once.
-  const [bulkReplyOpen, setBulkReplyOpen] = useState(false)
+  const [bulkReplyOpen, setBulkReplyOpen] = useState(false);
   // Indicates if additional comments are being loaded, e.g., for infinite scrolling.
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
   // Tracks comment IDs whose full text is expanded (if truncated).
-  const [expandedComments, setExpandedComments] = useState<string[]>([])
+  const [expandedComments, setExpandedComments] = useState<string[]>([]);
   // Tracks comment IDs whose replies section is currently visible.
-  const [expandedReplies, setExpandedReplies] = useState<string[]>([])
+  const [expandedReplies, setExpandedReplies] = useState<string[]>([]);
   // Stores the current sorting criteria for the comments list (e.g., "recent", "popular").
-  const [sortOption, setSortOption] = useState<string>("recent")
-  const feedRef = useRef<HTMLDivElement | null>(null)
-  const { toast } = useToast()
+  const [sortOption, setSortOption] = useState<string>("recent");
+  const feedRef = useRef<HTMLDivElement | null>(null);
+  const { toast } = useToast();
 
   /**
    * Converts human-readable time strings (e.g., "1 hour ago", "2 days ago")
@@ -114,16 +93,16 @@ export function CommentsFeed({
    */
   const parseTimeToMinutes = (timeStr: string): number => {
     if (timeStr.includes("minute")) {
-      return Number.parseInt(timeStr.split(" ")[0])
+      return Number.parseInt(timeStr.split(" ")[0]);
     } else if (timeStr.includes("hour")) {
-      return Number.parseInt(timeStr.split(" ")[0]) * 60
+      return Number.parseInt(timeStr.split(" ")[0]) * 60;
     } else if (timeStr.includes("day")) {
-      return Number.parseInt(timeStr.split(" ")[0]) * 60 * 24
+      return Number.parseInt(timeStr.split(" ")[0]) * 60 * 24;
     } else if (timeStr.includes("week")) {
-      return Number.parseInt(timeStr.split(" ")[0]) * 60 * 24 * 7
+      return Number.parseInt(timeStr.split(" ")[0]) * 60 * 24 * 7;
     }
-    return 0
-  }
+    return 0;
+  };
 
   const displayedComments = useMemo(() => {
     let filteredComments = [...initialComments];
@@ -134,7 +113,7 @@ export function CommentsFeed({
       filteredComments = filteredComments.filter(
         (comment) =>
           comment.text.toLowerCase().includes(searchLower) ||
-          comment.author.name.toLowerCase().includes(searchLower),
+          comment.author.name.toLowerCase().includes(searchLower)
       );
     }
 
@@ -151,28 +130,28 @@ export function CommentsFeed({
     // Apply platform filters
     if (filters.platforms && filters.platforms.length > 0) {
       filteredComments = filteredComments.filter((comment) =>
-        filters.platforms.includes(comment.platform),
+        filters.platforms.includes(comment.platform)
       );
     }
 
     // Apply emotion filters
     if (filters.emotions && filters.emotions.length > 0) {
       filteredComments = filteredComments.filter((comment) =>
-        filters.emotions.includes(comment.emotion),
+        filters.emotions.includes(comment.emotion)
       );
     }
 
     // Apply sentiment filters
     if (filters.sentiments && filters.sentiments.length > 0) {
       filteredComments = filteredComments.filter((comment) =>
-        filters.sentiments.includes(comment.sentiment),
+        filters.sentiments.includes(comment.sentiment)
       );
     }
 
     // Apply category filters
     if (filters.categories && filters.categories.length > 0) {
       filteredComments = filteredComments.filter((comment) =>
-        filters.categories.includes(comment.category),
+        filters.categories.includes(comment.category)
       );
     }
 
@@ -217,68 +196,72 @@ export function CommentsFeed({
    */
   useEffect(() => {
     const handleKeyDown = (e: React.KeyboardEvent) => {
-      if (!displayedComments.length) return
+      if (!displayedComments.length) return;
 
       // Find current index
-      const currentIndex = selectedComment ? displayedComments.findIndex((c) => c.id === selectedComment.id) : -1
+      const currentIndex = selectedComment
+        ? displayedComments.findIndex((c) => c.id === selectedComment.id)
+        : -1;
 
       if (e.key === "ArrowDown") {
-        e.preventDefault()
-        const nextIndex = currentIndex < displayedComments.length - 1 ? currentIndex + 1 : 0
-        onCommentSelect(displayedComments[nextIndex])
+        e.preventDefault();
+        const nextIndex = currentIndex < displayedComments.length - 1 ? currentIndex + 1 : 0;
+        onCommentSelect(displayedComments[nextIndex]);
       } else if (e.key === "ArrowUp") {
-        e.preventDefault()
-        const prevIndex = currentIndex > 0 ? currentIndex - 1 : displayedComments.length - 1
-        onCommentSelect(displayedComments[prevIndex])
+        e.preventDefault();
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : displayedComments.length - 1;
+        onCommentSelect(displayedComments[prevIndex]);
       } else if (
         e.key === "Enter" &&
         typeof document !== "undefined" && // Add check for document
         document.activeElement?.tagName !== "INPUT" &&
         selectedComment
       ) {
-        e.preventDefault()
-        setReplyingTo(selectedComment)
+        e.preventDefault();
+        setReplyingTo(selectedComment);
       } else if (e.key === "Escape") {
         if (replyingTo) {
-          e.preventDefault()
-          setReplyingTo(null)
+          e.preventDefault();
+          setReplyingTo(null);
         }
       }
-    }
+    };
 
-    window.addEventListener("keydown", handleKeyDown as EventListener)
-    return () => window.removeEventListener("keydown", handleKeyDown as EventListener)
-  }, [displayedComments, selectedComment, onCommentSelect, replyingTo])
+    window.addEventListener("keydown", handleKeyDown as EventListener);
+    return () => window.removeEventListener("keydown", handleKeyDown as EventListener);
+  }, [displayedComments, selectedComment, onCommentSelect, replyingTo]);
 
   const handleReply = useCallback((comment: Comment) => {
-    setReplyingTo(comment)
-  }, [])
+    setReplyingTo(comment);
+  }, []);
 
   const handleCloseReply = useCallback(() => {
-    setReplyingTo(null)
-  }, [])
+    setReplyingTo(null);
+  }, []);
 
   const handleSearch = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault() // Prevent form submission
-      onFilterChange({ ...filters, search: searchValue })
+      e.preventDefault(); // Prevent form submission
+      onFilterChange({ ...filters, search: searchValue });
     },
-    [searchValue, onFilterChange, filters],
-  )
+    [searchValue, onFilterChange, filters]
+  );
 
   const clearSearch = useCallback(() => {
-    setSearchValue("")
-    onFilterChange({ ...filters, search: "" })
-  }, [onFilterChange, filters])
+    setSearchValue("");
+    onFilterChange({ ...filters, search: "" });
+  }, [onFilterChange, filters]);
 
   const clearFilter = useCallback(
     (filterType: keyof FilterState, filterValue: string) => {
       const currentFilterValues = filters[filterType] as string[] | undefined;
-      const newFilterValues = currentFilterValues ? currentFilterValues.filter((id: string) => id !== filterValue) : [];
-      onFilterChange({ ...filters, [filterType]: newFilterValues })
+      const newFilterValues = currentFilterValues
+        ? currentFilterValues.filter((id: string) => id !== filterValue)
+        : [];
+      onFilterChange({ ...filters, [filterType]: newFilterValues });
     },
-    [filters, onFilterChange],
-  )
+    [filters, onFilterChange]
+  );
 
   const clearAllFilters = useCallback(() => {
     onFilterChange({
@@ -288,33 +271,33 @@ export function CommentsFeed({
       emotions: [],
       sentiments: [],
       categories: [],
-    })
-    setSearchValue("")
-  }, [onFilterChange])
+    });
+    setSearchValue("");
+  }, [onFilterChange]);
 
   const toggleCommentSelection = useCallback((commentId: string) => {
     setSelectedComments((prev) => {
       if (prev.includes(commentId)) {
-        return prev.filter((id) => id !== commentId)
+        return prev.filter((id) => id !== commentId);
       } else {
-        return [...prev, commentId]
+        return [...prev, commentId];
       }
-    })
-  }, [])
+    });
+  }, []);
 
   const toggleSelectAll = useCallback(() => {
     setSelectedComments((prev) => {
       if (prev.length === displayedComments.length) {
-        return []
+        return [];
       } else {
-        return displayedComments.map((comment) => comment.id)
+        return displayedComments.map((comment) => comment.id);
       }
-    })
-  }, [displayedComments])
+    });
+  }, [displayedComments]);
 
   const handleBulkReply = useCallback(() => {
-    setBulkReplyOpen(true)
-  }, [])
+    setBulkReplyOpen(true);
+  }, []);
 
   const handleBulkArchive = useCallback(() => {
     // Show toast notification
@@ -322,9 +305,9 @@ export function CommentsFeed({
       title: "Comments Archived",
       description: `${selectedComments.length} comments have been archived.`,
       variant: "default",
-    })
-    setSelectedComments([])
-  }, [selectedComments, toast])
+    });
+    setSelectedComments([]);
+  }, [selectedComments, toast]);
 
   const handleBulkSaveForLater = useCallback(() => {
     // Show toast notification
@@ -332,32 +315,32 @@ export function CommentsFeed({
       title: "Comments Saved",
       description: `${selectedComments.length} comments have been saved for later.`,
       variant: "default",
-    })
-    setSelectedComments([])
-  }, [selectedComments, toast])
+    });
+    setSelectedComments([]);
+  }, [selectedComments, toast]);
 
   // Toggle expanded state for a comment
   const toggleExpandComment = useCallback((commentId: string) => {
     setExpandedComments((prev) => {
       if (prev.includes(commentId)) {
-        return prev.filter((id) => id !== commentId)
+        return prev.filter((id) => id !== commentId);
       } else {
-        return [...prev, commentId]
+        return [...prev, commentId];
       }
-    })
-  }, [])
+    });
+  }, []);
 
   // Toggle expanded replies for a comment
   const toggleExpandReplies = useCallback((commentId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
     setExpandedReplies((prev) => {
       if (prev.includes(commentId)) {
-        return prev.filter((id) => id !== commentId)
+        return prev.filter((id) => id !== commentId);
       } else {
-        return [...prev, commentId]
+        return [...prev, commentId];
       }
-    })
-  }, [])
+    });
+  }, []);
 
   // Define a type for actionMessages
   const actionMessages: Record<CommentAction, string> = {
@@ -375,24 +358,24 @@ export function CommentsFeed({
         title: actionMessages[action] || "Action completed",
         description: `Comment ID: ${commentId.substring(0, 8)}...`,
         variant: "default",
-      })
+      });
     },
-    [toast],
-  )
+    [toast]
+  );
 
   // Handle sort option selection
   const handleSortChange = useCallback(
     (sortId: string) => {
-      setSortOption(sortId)
+      setSortOption(sortId);
       // No longer need to manually setDisplayedComments here, useMemo will handle it.
       toast({
         title: "Comments sorted",
         description: `Sorted by ${sortOptions.find((opt) => opt.id === sortId)?.label}`,
         variant: "default",
-      })
+      });
     },
-    [toast], // displayedComments is removed from dependencies
-  )
+    [toast] // displayedComments is removed from dependencies
+  );
 
   // Define loadMoreComments before handleScroll
   /**
@@ -401,25 +384,26 @@ export function CommentsFeed({
    * It also has a hardcoded limit of not "loading" more if 50 comments are already displayed.
    */
   const loadMoreComments = useCallback(() => {
-    if (displayedComments.length >= 50) return 
+    if (displayedComments.length >= 50) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     // Simulate loading more comments
     setTimeout(() => {
-      setIsLoading(false)
-    }, 1500)
-  }, [displayedComments.length])
+      setIsLoading(false);
+    }, 1500);
+  }, [displayedComments.length]);
 
   // Now handleScroll can safely reference loadMoreComments
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
       const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-      if (scrollHeight - scrollTop <= clientHeight * 1.5 && !isLoading && loadMoreComments) { // Added null check for loadMoreComments
-        loadMoreComments()
+      if (scrollHeight - scrollTop <= clientHeight * 1.5 && !isLoading && loadMoreComments) {
+        // Added null check for loadMoreComments
+        loadMoreComments();
       }
     },
-    [isLoading, loadMoreComments],
-  )
+    [isLoading, loadMoreComments]
+  );
 
   // Simulate loading more comments on scroll
   // const handleScroll = useCallback(
@@ -444,7 +428,7 @@ export function CommentsFeed({
 
   // Transforms the `filters` prop into an array of `ActiveFilter` objects
   // suitable for display by the `ActiveFiltersBar` component.
-  const activeFilters: ActiveFilter[] = []
+  const activeFilters: ActiveFilter[] = [];
 
   if (filters.status && filters.status !== "all") {
     activeFilters.push({
@@ -462,7 +446,7 @@ export function CommentsFeed({
       label: platform.charAt(0).toUpperCase() + platform.slice(1),
       icon: platformIcons[platform],
     });
-  })
+  });
 
   filters.emotions?.forEach((emotion: Emotion) => {
     activeFilters.push({
@@ -471,7 +455,7 @@ export function CommentsFeed({
       label: emotion.charAt(0).toUpperCase() + emotion.slice(1),
       icon: emotionIcons[emotion],
     });
-  })
+  });
 
   filters.sentiments?.forEach((sentiment: Sentiment) => {
     activeFilters.push({
@@ -480,7 +464,7 @@ export function CommentsFeed({
       label: sentiment.charAt(0).toUpperCase() + sentiment.slice(1),
       // No icon for sentiment type based on current structure
     });
-  })
+  });
 
   filters.categories?.forEach((category: Category) => {
     activeFilters.push({
@@ -489,10 +473,10 @@ export function CommentsFeed({
       label: category.charAt(0).toUpperCase() + category.slice(1),
       // No icon for category type based on current structure
     });
-  })
+  });
 
   return (
-    <div className="h-full flex flex-col" ref={feedRef}>
+    <div className="flex h-full flex-col" ref={feedRef}>
       <FeedToolbar
         searchValue={searchValue}
         onSearchValueChange={setSearchValue}
@@ -521,10 +505,10 @@ export function CommentsFeed({
       />
 
       {/* Comments Feed - Vertical Scroll Only */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1" onScroll={handleScroll}>
+      <div className="flex-1 space-y-1 overflow-y-auto p-2" onScroll={handleScroll}>
         {displayedComments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-center">
-            <MessageSquare className="h-16 w-16 text-muted-foreground mb-4 opacity-50" />
+          <div className="flex h-64 flex-col items-center justify-center text-center">
+            <MessageSquare className="text-muted-foreground mb-4 h-16 w-16 opacity-50" />
             <h3 className="text-xl font-medium">No comments found</h3>
             <p className="text-muted-foreground">Try adjusting your filters to see more results</p>
           </div>
@@ -549,7 +533,7 @@ export function CommentsFeed({
 
               {/* Expanded Replies */}
               {expandedReplies.includes(comment.id) && (
-                <div className="replies-container ml-[3.75rem] pl-3 border-l-2 border-primary/20 dark:border-primary/30 mt-1 mb-1.5 animate-slide-down animate-fade-in">
+                <div className="replies-container border-primary/20 dark:border-primary/30 animate-slide-down animate-fade-in mt-1 mb-1.5 ml-[3.75rem] border-l-2 pl-3">
                   <CommentReplies commentId={comment.id} />
                 </div>
               )}
@@ -559,49 +543,54 @@ export function CommentsFeed({
 
         {isLoading && (
           <div className="flex justify-center py-4">
-            <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+            <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"></div>
           </div>
         )}
       </div>
 
-      {replyingTo && <ReplyDialog comment={replyingTo} onClose={handleCloseReply} selectedComments={[]} />}
+      {replyingTo && (
+        <ReplyDialog comment={replyingTo} onClose={handleCloseReply} selectedComments={[]} />
+      )}
 
-      {bulkReplyOpen && (() => {
-        const bulkReplyTargetComment = displayedComments.find((c) => selectedComments.includes(c.id));
-        const platformForBulkReply = bulkReplyTargetComment?.platform || "youtube";
-        
-        // For bulk replies, a dummy/partial Comment object is constructed.
-        // This provides necessary context (like platform) to the ReplyDialog
-        // without representing a single, specific comment.
-        return (
-          <ReplyDialog
-            comment={{ 
-              id: `bulk-reply-${Date.now()}`, 
-              author: { name: "Multiple Recipients", avatar: "" }, 
-              text: `Replying to ${selectedComments.length} comments`,
-              platform: platformForBulkReply,
-              time: new Date().toISOString(), 
-              likes: 0,
-              replies: 0,
-              flagged: false,
-              needsAttention: false,
-              archived: false,
-              postId: "",
-              postTitle: "",
-              postThumbnail: "",
-              emotion: "neutral",
-              sentiment: "neutral",
-              category: "general",
-            }}
-            onClose={() => {
-              setBulkReplyOpen(false)
-              setSelectedComments([])
-            }}
-            isBulkReply={true}
-            selectedComments={selectedComments}
-          />
-        );
-      })()}
+      {bulkReplyOpen &&
+        (() => {
+          const bulkReplyTargetComment = displayedComments.find((c) =>
+            selectedComments.includes(c.id)
+          );
+          const platformForBulkReply = bulkReplyTargetComment?.platform || "youtube";
+
+          // For bulk replies, a dummy/partial Comment object is constructed.
+          // This provides necessary context (like platform) to the ReplyDialog
+          // without representing a single, specific comment.
+          return (
+            <ReplyDialog
+              comment={{
+                id: `bulk-reply-${Date.now()}`,
+                author: { name: "Multiple Recipients", avatar: "" },
+                text: `Replying to ${selectedComments.length} comments`,
+                platform: platformForBulkReply,
+                time: new Date().toISOString(),
+                likes: 0,
+                replies: 0,
+                flagged: false,
+                needsAttention: false,
+                archived: false,
+                postId: "",
+                postTitle: "",
+                postThumbnail: "",
+                emotion: "neutral",
+                sentiment: "neutral",
+                category: "general",
+              }}
+              onClose={() => {
+                setBulkReplyOpen(false);
+                setSelectedComments([]);
+              }}
+              isBulkReply={true}
+              selectedComments={selectedComments}
+            />
+          );
+        })()}
     </div>
-  )
+  );
 }

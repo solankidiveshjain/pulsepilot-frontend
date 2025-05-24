@@ -1,56 +1,44 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import * as React from "react"
-import { useState, useEffect } from "react"
-import { mockReplies } from "@/lib/mock-data"
-import type { CommentReply } from "@/types"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
+import { useReplies } from "@/lib/hooks/useReplies";
+import Image from "next/image";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { CheckCircle, MoreHorizontal, ThumbsUp } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { CheckCircle, MoreHorizontal, ThumbsUp } from "lucide-react";
 
 export function CommentReplies({ commentId }: { commentId: string }) {
-  const [replies, setReplies] = useState<CommentReply[]>([])
-  const [loading, setLoading] = useState(true)
-  const { toast } = useToast()
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const relevantReplies = (mockReplies as Record<string, CommentReply[]>)[commentId] || []
-      setReplies(relevantReplies)
-      setLoading(false)
-    }, 800)
-
-    return () => clearTimeout(timer)
-  }, [commentId])
+  const { data: replies = [], isLoading, isError } = useReplies("mock-team", commentId);
+  const { toast } = useToast();
 
   return (
     <div className="space-y-2 py-1">
-      {loading ? (
-        <div className="text-center py-3 text-sm text-muted-foreground">Loading replies...</div>
+      {isLoading ? (
+        <div className="text-muted-foreground py-3 text-center text-sm">Loading replies...</div>
+      ) : isError ? (
+        <div className="text-destructive py-3 text-center text-sm">Error loading replies</div>
       ) : replies.length === 0 ? (
-        <div className="text-center py-3 text-sm text-muted-foreground">No replies yet</div>
+        <div className="text-muted-foreground py-3 text-center text-sm">No replies yet</div>
       ) : (
         replies.map((reply) => (
           <Card
             key={reply.id}
-            className={`border-border/30 transition-all hover:border-border/60 ${
+            className={`border-border/30 hover:border-border/60 transition-all ${
               reply.author.isOwner ? "bg-primary/5" : ""
             }`}
           >
             <CardContent className="p-2">
               <div className="flex gap-2">
-                <Avatar className="h-6 w-6 border border-border/60">
+                <Avatar className="border-border/60 h-6 w-6 border">
                   <Image
                     src={reply.author.avatar || "/placeholder.svg"}
                     alt={reply.author.name}
@@ -61,24 +49,24 @@ export function CommentReplies({ commentId }: { commentId: string }) {
                   <AvatarFallback>{reply.author.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-0.5">
+                  <div className="mb-0.5 flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-medium text-xs">{reply.author.name}</span>
+                      <span className="text-xs font-medium">{reply.author.name}</span>
                       {reply.author.isOwner && (
-                        <Badge className="h-4 px-1 text-[9px] bg-primary/10 text-primary flex items-center gap-0.5">
+                        <Badge className="bg-primary/10 text-primary flex h-4 items-center gap-0.5 px-1 text-[9px]">
                           <CheckCircle className="h-2 w-2" />
                           <span>Official</span>
                         </Badge>
                       )}
                     </div>
-                    <span className="text-[9px] text-muted-foreground">{reply.time}</span>
+                    <span className="text-muted-foreground text-[9px]">{reply.time}</span>
                   </div>
 
-                  <p className="text-xs leading-tight mb-1">{reply.text}</p>
+                  <p className="mb-1 text-xs leading-tight">{reply.text}</p>
 
-                  <div className="flex items-center justify-between mt-1">
+                  <div className="mt-1 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground flex items-center gap-0.5 text-xs">
                         <ThumbsUp className="h-3 w-3" />
                         <span>{reply.likes}</span>
                       </div>
@@ -86,17 +74,25 @@ export function CommentReplies({ commentId }: { commentId: string }) {
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 w-5 p-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <MoreHorizontal className="h-3 w-3" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" sideOffset={5} className="w-40 comment-menu">
+                      <DropdownMenuContent align="end" sideOffset={5} className="comment-menu w-40">
                         <DropdownMenuItem
                           className="text-xs"
                           onClick={(e) => {
-                            e.preventDefault()
+                            e.preventDefault();
                             // TODO: Implement copy text functionality
-                            toast({ title: "Text copied (not implemented)", description: "Reply text copy action."})
+                            toast({
+                              title: "Text copied (not implemented)",
+                              description: "Reply text copy action.",
+                            });
                           }}
                         >
                           <svg // Using SVG directly as lucide-react doesn't have a direct 'copy' icon in this context
@@ -120,9 +116,12 @@ export function CommentReplies({ commentId }: { commentId: string }) {
                             <DropdownMenuItem
                               className="text-xs"
                               onClick={(e) => {
-                                e.preventDefault()
+                                e.preventDefault();
                                 // TODO: Implement edit functionality
-                                toast({ title: "Edit action (not implemented)", description: "Edit reply action."})
+                                toast({
+                                  title: "Edit action (not implemented)",
+                                  description: "Edit reply action.",
+                                });
                               }}
                             >
                               <svg // Using SVG for edit
@@ -142,11 +141,14 @@ export function CommentReplies({ commentId }: { commentId: string }) {
                               <span>Edit</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              className="text-xs text-destructive"
+                              className="text-destructive text-xs"
                               onClick={(e) => {
-                                e.preventDefault()
+                                e.preventDefault();
                                 // TODO: Implement delete functionality
-                                toast({ title: "Delete action (not implemented)", description: "Delete reply action."})
+                                toast({
+                                  title: "Delete action (not implemented)",
+                                  description: "Delete reply action.",
+                                });
                               }}
                             >
                               <svg // Using SVG for delete
@@ -170,9 +172,12 @@ export function CommentReplies({ commentId }: { commentId: string }) {
                           <DropdownMenuItem
                             className="text-xs"
                             onClick={(e) => {
-                              e.preventDefault()
+                              e.preventDefault();
                               // TODO: Implement report functionality
-                              toast({ title: "Report action (not implemented)", description: "Report reply action."})
+                              toast({
+                                title: "Report action (not implemented)",
+                                description: "Report reply action.",
+                              });
                             }}
                           >
                             <svg // Using SVG for report
@@ -202,5 +207,5 @@ export function CommentReplies({ commentId }: { commentId: string }) {
         ))
       )}
     </div>
-  )
+  );
 }

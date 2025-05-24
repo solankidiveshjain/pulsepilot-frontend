@@ -1,94 +1,90 @@
-"use client"
+"use client";
 
-import { memo, useState, useEffect } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent } from "@/components/ui/card"
-import { ThumbsUp } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { mockReplies } from "@/lib/mock-data"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useReplies } from "@/lib/hooks/useReplies";
+import { ThumbsUp } from "lucide-react";
+import { memo } from "react";
 
 interface CommentRepliesProps {
-  commentId: string
+  commentId: string;
 }
 
 function CommentRepliesComponent({ commentId }: CommentRepliesProps) {
-  const [loading, setLoading] = useState(true)
-  const [replies, setReplies] = useState<any[]>([])
+  const { data: replies = [], isLoading, isError } = useReplies("mock-team", commentId);
 
-  useEffect(() => {
-    // Simulate loading replies
-    const timer = setTimeout(() => {
-      setReplies(mockReplies[commentId] || [])
-      setLoading(false)
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [commentId])
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="pl-8 space-y-1.5 animate-pulse">
-        <div className="h-10 bg-linear-to-r from-primary/10 to-primary/5 rounded-md shimmer-effect"></div>
+      <div className="animate-pulse space-y-1.5 pl-8">
+        <div className="from-primary/10 to-primary/5 shimmer-effect h-10 rounded-md bg-linear-to-r" />
         <div
-          className="h-10 bg-linear-to-r from-primary/10 to-primary/5 rounded-md shimmer-effect"
+          className="from-primary/10 to-primary/5 shimmer-effect h-10 rounded-md bg-linear-to-r"
           style={{ animationDelay: "0.2s" }}
-        ></div>
+        />
         <div
-          className="h-10 bg-linear-to-r from-primary/10 to-primary/5 rounded-md shimmer-effect"
+          className="from-primary/10 to-primary/5 shimmer-effect h-10 rounded-md bg-linear-to-r"
           style={{ animationDelay: "0.4s" }}
-        ></div>
+        />
       </div>
-    )
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-destructive py-2 pl-8 text-center text-[10px]">
+        Error loading replies
+      </div>
+    );
   }
 
   if (replies.length === 0) {
     return (
-      <div className="pl-8 py-2 text-center text-[10px] text-muted-foreground">No replies to this comment yet.</div>
-    )
+      <div className="text-muted-foreground py-2 pl-8 text-center text-[10px]">
+        No replies to this comment yet.
+      </div>
+    );
   }
 
-  // Colors for the gradient animations
   const gradientColors = [
     "from-blue-500/20 via-purple-500/20 to-pink-500/20",
     "from-green-500/20 via-teal-500/20 to-blue-500/20",
     "from-yellow-500/20 via-orange-500/20 to-red-500/20",
     "from-pink-500/20 via-purple-500/20 to-indigo-500/20",
     "from-indigo-500/20 via-blue-500/20 to-cyan-500/20",
-  ]
+  ];
 
   return (
-    <div className="pl-8 space-y-1 animate-fade-in">
+    <div className="animate-fade-in space-y-1 pl-8">
       {replies.map((reply, index) => (
         <Card
           key={reply.id}
-          className={`border-border/40 shadow-sm bg-linear-to-r animate-gradient-x ${gradientColors[index % gradientColors.length]}`}
+          className={`group border-border/40 animate-gradient-x bg-linear-to-r shadow-sm ${gradientColors[index % gradientColors.length]} hover:bg-muted/5 focus-visible:ring-primary cursor-pointer transition-all duration-200 hover:shadow-lg focus-visible:ring-2 focus-visible:outline-none`}
           style={{ animationDelay: `${index * 0.1}s` }}
         >
           <CardContent className="p-2">
             <div className="flex gap-1.5">
-              <Avatar className="h-5 w-5 border border-border/60">
-                <AvatarImage src={reply.author.avatar || "/placeholder.svg"} alt={reply.author.name} />
+              <Avatar className="border-border/60 h-5 w-5 border">
+                <AvatarImage
+                  src={reply.author.avatar || "/placeholder.svg"}
+                  alt={reply.author.name}
+                />
                 <AvatarFallback>{reply.author.name.charAt(0)}</AvatarFallback>
               </Avatar>
-
               <div className="flex-1 space-y-0.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <span className="font-medium text-[10px]">{reply.author.name}</span>
+                    <span className="text-[10px] font-medium">{reply.author.name}</span>
                     {reply.author.isOwner && (
-                      <span className="text-[8px] px-1 py-0.5 bg-primary/10 text-primary rounded-full">You</span>
-                    )}
-                    {reply.isAiGenerated && (
-                      <span className="text-[8px] px-1 py-0.5 bg-purple-500/10 text-purple-500 rounded-full flex items-center gap-0.5 ai-pulse">
-                        <span className="h-1.5 w-1.5 rounded-full bg-purple-500"></span>
-                        AI
+                      <span className="bg-primary/10 text-primary rounded-full px-1 py-0.5 text-[8px]">
+                        You
                       </span>
                     )}
                   </div>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="text-[8px] text-muted-foreground">{reply.time}</span>
+                        <span className="text-muted-foreground text-[8px]">{reply.time}</span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="text-xs">
                         {reply.timeTooltip}
@@ -96,10 +92,8 @@ function CommentRepliesComponent({ commentId }: CommentRepliesProps) {
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-
-                <p className="text-[10px] ultra-compact line-clamp-2">{reply.text}</p>
-
-                <div className="flex items-center gap-1 text-[8px] text-muted-foreground">
+                <p className="ultra-compact line-clamp-2 text-[10px]">{reply.text}</p>
+                <div className="text-muted-foreground flex items-center gap-1 text-[8px]">
                   <ThumbsUp className="h-2 w-2" />
                   <span>{reply.likes}</span>
                 </div>
@@ -109,8 +103,7 @@ function CommentRepliesComponent({ commentId }: CommentRepliesProps) {
         </Card>
       ))}
     </div>
-  )
+  );
 }
 
-// Memoize the component to prevent unnecessary re-renders
-export const CommentReplies = memo(CommentRepliesComponent)
+export const CommentReplies = memo(CommentRepliesComponent);

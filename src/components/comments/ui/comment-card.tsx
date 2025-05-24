@@ -1,56 +1,57 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar" // Removed AvatarImage as next/image is used
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"; // Removed AvatarImage as next/image is used
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useToast } from "@/hooks/use-toast"
-import { emotionInfo, platformInfo } from "@/lib/mock-data"
-import { cn } from "@/lib/utils"
-import type { Comment, Platform } from "@/types"
+} from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
+import { emotionInfo, platformInfo } from "@/lib/mock-data";
+import { cn } from "@/lib/utils";
+import type { Comment, Platform } from "@/types";
 import {
+  AlertTriangle,
+  Archive as ArchiveIcon, // Renamed to avoid conflict if 'Archive' is used as a component elsewhere
+  BookmarkIcon,
   ChevronDown,
   ChevronRight,
   ChevronUp,
-  MessageSquare,
-  Reply,
-  ThumbsUp,
-  Zap,
-  Star,
   Flag,
-  Archive as ArchiveIcon, // Renamed to avoid conflict if 'Archive' is used as a component elsewhere
-  BookmarkIcon,
+  MessageSquare,
+  MoreHorizontal,
+  Reply,
+  Star,
+  ThumbsUp,
   Trash,
-  MoreHorizontal, // Added for the dropdown trigger
-} from "lucide-react"
-import Image from "next/image"
-import * as React from "react" // Changed to import * as React
-import { memo, useState } from "react" // Added useState for likeAnim
+  Zap,
+} from "lucide-react";
+import Image from "next/image";
+import * as React from "react"; // Changed to import * as React
+import { memo, useState } from "react"; // Added useState for likeAnim
 
 // Define CommentAction type
 export type CommentAction = "flag" | "archive" | "save" | "delete" | "important";
 
 interface CommentCardProps {
-  comment: Comment
-  isSelected: boolean
-  isChecked: boolean
-  isExpanded: boolean
-  isRepliesExpanded: boolean
-  onSelect: () => void
-  onReply: () => void
-  onToggleSelect: () => void
-  onToggleExpand: () => void
-  onToggleReplies: (e: React.MouseEvent) => void
-  onAction: (action: CommentAction) => void // Updated prop type
-  isMobile?: boolean
-  searchTerm?: string // Added searchTerm prop
+  comment: Comment;
+  isSelected: boolean;
+  isChecked: boolean;
+  isExpanded: boolean;
+  isRepliesExpanded: boolean;
+  onSelect: () => void;
+  onReply: () => void;
+  onToggleSelect: () => void;
+  onToggleExpand: () => void;
+  onToggleReplies: (e: React.MouseEvent) => void;
+  onAction: (action: CommentAction) => void; // Updated prop type
+  isMobile?: boolean;
+  searchTerm?: string; // Added searchTerm prop
 }
 
 // Highlight search term utility function (copied from comments-feed.tsx)
@@ -65,7 +66,7 @@ const highlightSearchTerm = (text: string, term?: string): React.ReactNode => {
       </span>
     ) : (
       part
-    ),
+    )
   );
 };
 
@@ -90,11 +91,13 @@ function CommentCardComponent({
   const emotionIcon = emotionInfo[comment.emotion]?.icon || "😐";
 
   // Check if comment text is long enough to need truncation
-  const needsTruncation = comment.text.length > 180
-  const displayText = isExpanded || !needsTruncation ? comment.text : comment.text.slice(0, 180) + "..."
+  const needsTruncation = comment.text.length > 180;
+  const displayText =
+    isExpanded || !needsTruncation ? comment.text : comment.text.slice(0, 180) + "...";
 
   // Check if comment is AI-generated (for demo purposes)
-  const isAiGenerated = comment.id === "comment1" || comment.id === "comment7" || comment.id === "comment4"
+  const isAiGenerated =
+    comment.id === "comment1" || comment.id === "comment7" || comment.id === "comment4";
 
   const componentActionMessages: Record<CommentAction, string> = {
     important: "Comment marked as important",
@@ -112,9 +115,17 @@ function CommentCardComponent({
       variant: "default",
     });
   };
-  
+
   // Local animation state for Like button (copied from comments-feed.tsx's CommentCard)
   const [likeAnim, setLikeAnim] = useState(false);
+  // Local animation state for Replies button
+  const [replyAnim, setReplyAnim] = useState(false);
+  const handleRepliesClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setReplyAnim(true);
+    onToggleReplies(e);
+    setTimeout(() => setReplyAnim(false), 300);
+  };
   const handleLikeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     setLikeAnim(true);
@@ -124,33 +135,40 @@ function CommentCardComponent({
   return (
     <Card
       className={cn(
-        "comment-card-compact group cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 hover:border-primary", // Added hover effects from inline card
-        isSelected ? "comment-card-selected active-comment border-primary" : "" // Added active styles from inline card
+        "comment-card-compact group hover:border-primary hover:bg-muted/5 focus-visible:ring-primary cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:ring-2 focus-visible:outline-none",
+        isSelected ? "comment-card-selected active-comment border-primary" : ""
       )}
       onClick={onSelect}
     >
-      <CardContent className="p-1"> {/* p-1 to match inline card */}
+      <CardContent className="p-1">
+        {" "}
+        {/* p-1 to match inline card */}
         <div className="flex gap-2">
           {/* Left column: Selection & thumbnail (changed from w-8 to w-12 to match inline) */}
-          <div className="flex flex-col items-center gap-1 w-12 flex-shrink-0">
+          <div className="flex w-12 flex-shrink-0 flex-col items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
-              className="h-4 w-4 p-0 rounded-sm"
+              className="h-4 w-4 rounded-sm p-0"
               onClick={(e) => {
-                e.stopPropagation()
-                onToggleSelect()
+                e.stopPropagation();
+                onToggleSelect();
               }}
             >
               {isChecked ? (
                 <svg
-                  className="h-3 w-3 text-primary"
+                  className="text-primary h-3 w-3"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               ) : (
                 <svg
@@ -164,9 +182,9 @@ function CommentCardComponent({
                 </svg>
               )}
             </Button>
-            <Avatar className="h-6 w-6 border border-border/60">
+            <Avatar className="border-border/60 h-6 w-6 border">
               <Image
-                src={comment.author.avatar || "/placeholder.svg"} 
+                src={comment.author.avatar || "/placeholder.svg"}
                 alt={comment.author.name}
                 width={24}
                 height={24}
@@ -175,14 +193,14 @@ function CommentCardComponent({
               <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
             </Avatar>
             {/* Platform icon replaced by post thumbnail section from inline card */}
-            <div className="relative w-8 h-8 overflow-hidden rounded-md group-hover:ring-2 group-hover:ring-primary transition-all">
+            <div className="group-hover:ring-primary relative h-8 w-8 overflow-hidden rounded-md transition-all group-hover:ring-2">
               <Image
                 src={comment.postThumbnail} // Assuming postThumbnail is available in Comment type
                 alt={comment.postTitle} // Assuming postTitle is available
                 fill
                 className="object-cover"
               />
-              <div className="absolute bottom-1 right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-md">
+              <div className="absolute right-1 bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-md">
                 <Image
                   src={platformIcon}
                   alt={comment.platform}
@@ -195,16 +213,20 @@ function CommentCardComponent({
           </div>
 
           {/* Main content area */}
-          <div className="flex-1 max-w-full">
-            <div className="flex items-start justify-between mb-0"> {/* mb-0 to match inline card */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-medium text-xs">
+          <div className="max-w-full flex-1">
+            <div className="mb-0 flex items-start justify-between">
+              {" "}
+              {/* mb-0 to match inline card */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs font-medium">
                   {highlightSearchTerm(comment.author.name, searchTerm)}
                 </span>
-                <TooltipProvider delayDuration={300}> {/* Added delayDuration */}
+                <TooltipProvider delayDuration={300}>
+                  {" "}
+                  {/* Added delayDuration */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge className="h-4 px-1 text-[9px] flex items-center gap-0.5">
+                      <Badge className="flex h-4 items-center gap-0.5 px-1 text-[9px]">
                         <span>{emotionIcon}</span>
                       </Badge>
                     </TooltipTrigger>
@@ -214,7 +236,7 @@ function CommentCardComponent({
                   </Tooltip>
                 </TooltipProvider>
                 {isAiGenerated && (
-                  <Badge className="h-4 px-1 text-[9px] bg-purple-500/10 text-purple-500 flex items-center gap-0.5 ai-pulse">
+                  <Badge className="ai-pulse flex h-4 items-center gap-0.5 bg-purple-500/10 px-1 text-[9px] text-purple-500">
                     <Zap className="h-2 w-2" />
                     <span>AI</span>
                   </Badge>
@@ -223,77 +245,96 @@ function CommentCardComponent({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                    <div className="text-muted-foreground flex items-center gap-1 text-[9px]">
                       <span>{comment.time}</span>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
-                    {comment.timeTooltip || comment.time} 
+                    {comment.timeTooltip || comment.time}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
 
             {/* Video title tagline (from inline card) */}
-            <div className="text-[10px] font-semibold text-muted-foreground mb-0.5 truncate transition-colors group-hover:text-primary">
+            <div className="text-muted-foreground group-hover:text-primary mb-0.5 truncate text-[10px] font-semibold transition-colors">
               {comment.postTitle}
             </div>
-            <p className="text-[10px] leading-tight mb-0.5 line-clamp-1"> {/* mb-0.5 and line-clamp-1 from inline card */}
+            <p className="mb-0.5 line-clamp-1 text-[10px] leading-tight">
+              {" "}
+              {/* mb-0.5 and line-clamp-1 from inline card */}
               {highlightSearchTerm(displayText, searchTerm)}
             </p>
 
-            {needsTruncation && !isExpanded && ( // Added !isExpanded to match inline card logic
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 px-1 py-0 text-[9px] text-primary hover:bg-primary/5"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onToggleExpand()
-                }}
-              >
-                {isExpanded ? "Show less" : "See more"}
-                <ChevronRight className={`h-2.5 w-2.5 ml-0.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-              </Button>
-            )}
+            {needsTruncation &&
+              !isExpanded && ( // Added !isExpanded to match inline card logic
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-primary hover:bg-primary/5 h-5 px-1 py-0 text-[9px]"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleExpand();
+                  }}
+                >
+                  {isExpanded ? "Show less" : "See more"}
+                  <ChevronRight
+                    className={`ml-0.5 h-2.5 w-2.5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                  />
+                </Button>
+              )}
 
-            <div className="flex items-center justify-between mt-1"> {/* Removed flex-wrap and gap-1 */}
-              <div className="flex items-center gap-6"> {/* gap-6 from inline card */}
-                 <button // Changed from div to button, added animation classes
-                  className={`flex items-baseline gap-2 text-[10px] transition-colors ${likeAnim ? 'text-primary scale-125' : 'text-muted-foreground'} hover:text-primary duration-300 ease-out`}
+            <div className="mt-1 flex items-center justify-between">
+              {" "}
+              {/* Removed flex-wrap and gap-1 */}
+              <div className="flex items-center gap-6">
+                {" "}
+                {/* gap-6 from inline card */}
+                <button // Changed from div to button, added animation classes
+                  className={`flex items-center gap-2 text-[10px] transition-colors duration-300 ease-out ${likeAnim ? "text-primary scale-125" : "text-muted-foreground"} hover:text-primary hover:bg-primary/10 focus-visible:ring-primary rounded-md p-1 focus-visible:ring-2 focus-visible:outline-none`}
                   onClick={handleLikeClick}
                 >
                   <ThumbsUp className="h-4 w-4" /> {/* h-4 w-4 from inline card */}
                   <span>{comment.likes}</span>
                 </button>
-
                 {comment.replies > 0 && (
-                  <button // Changed from Button to button
-                    className="flex items-baseline gap-2 text-[10px] text-muted-foreground hover:text-primary transition-colors"
-                    onClick={onToggleReplies}
+                  <button // Replies button with animation
+                    className={`flex items-center gap-2 text-[10px] transition-colors duration-300 ease-out ${replyAnim ? "text-primary scale-125" : "text-muted-foreground"} hover:text-primary hover:bg-primary/10 focus-visible:ring-primary rounded-md p-1 focus-visible:ring-2 focus-visible:outline-none`}
+                    onClick={handleRepliesClick}
                   >
                     <MessageSquare className="h-4 w-4" /> {/* h-4 w-4 from inline card */}
                     <span>{comment.replies}</span>
-                    {isRepliesExpanded ? <ChevronUp className="h-4 w-4 ml-0.5" /> : <ChevronDown className="h-4 w-4 ml-0.5" />}
+                    {isRepliesExpanded ? (
+                      <ChevronUp className="ml-0.5 h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="ml-0.5 h-4 w-4" />
+                    )}
                   </button>
                 )}
-
                 <button // Changed from Button to button
-                  className="flex items-baseline gap-2 text-[10px] text-primary hover:underline transition-colors"
-                  onClick={(e) => { e.stopPropagation(); onReply(); }}
+                  className="text-primary flex items-baseline gap-2 text-[10px] transition-colors hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReply();
+                  }}
                 >
                   <Reply className="h-4 w-4" /> {/* h-4 w-4 from inline card */}
                   <span>Reply</span>
                 </button>
               </div>
-
-              <div className="flex items-center gap-2"> {/* gap-2 from inline card */}
+              <div className="flex items-center gap-2">
+                {" "}
+                {/* gap-2 from inline card */}
                 {comment.flagged && (
                   <TooltipProvider delayDuration={300}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge variant="destructive" className="text-[9px] h-4 px-1 animate-pulse-slow">
-                          <Flag className="h-2.5 w-2.5 mr-0.5" /> {/* Replaced SVG with Lucide Icon */}
+                        <Badge
+                          variant="destructive"
+                          className="animate-pulse-slow h-4 px-1 text-[9px]"
+                        >
+                          <Flag className="mr-0.5 h-2.5 w-2.5" />{" "}
+                          {/* Replaced SVG with Lucide Icon */}
                           Flagged
                         </Badge>
                       </TooltipTrigger>
@@ -307,8 +348,9 @@ function CommentCardComponent({
                   <TooltipProvider delayDuration={300}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Badge className="text-[9px] bg-yellow-500 hover:bg-yellow-600 h-4 px-1 animate-pulse-slow">
-                          <AlertTriangle className="h-2.5 w-2.5 mr-0.5" /> {/* Replaced SVG with Lucide Icon */}
+                        <Badge className="animate-pulse-slow h-4 bg-yellow-500 px-1 text-[9px] hover:bg-yellow-600">
+                          <AlertTriangle className="mr-0.5 h-2.5 w-2.5" />{" "}
+                          {/* Replaced SVG with Lucide Icon */}
                           Attention
                         </Badge>
                       </TooltipTrigger>
@@ -320,42 +362,67 @@ function CommentCardComponent({
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <MoreHorizontal className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" sideOffset={5} className="w-40 comment-menu">
+                  <DropdownMenuContent align="end" sideOffset={5} className="comment-menu w-40">
                     <DropdownMenuItem
-                      className="text-xs group"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDropdownAction("important"); }}
+                      className="group text-xs"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDropdownAction("important");
+                      }}
                     >
                       <Star className="mr-2 h-3 w-3 transition-colors group-hover:text-yellow-500" />
                       <span>Mark as important</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-xs group"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDropdownAction("flag"); }}
+                      className="group text-xs"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDropdownAction("flag");
+                      }}
                     >
                       <Flag className="mr-2 h-3 w-3 transition-colors group-hover:text-red-500" />
                       <span>Flag comment</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-xs group"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDropdownAction("archive"); }}
+                      className="group text-xs"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDropdownAction("archive");
+                      }}
                     >
                       <ArchiveIcon className="mr-2 h-3 w-3" />
                       <span>Archive</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-xs group"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDropdownAction("save"); }}
+                      className="group text-xs"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDropdownAction("save");
+                      }}
                     >
                       <BookmarkIcon className="mr-2 h-3 w-3 transition-colors group-hover:text-blue-500" />
                       <span>Save for later</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-xs text-destructive group"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDropdownAction("delete"); }}
+                      className="text-destructive group text-xs"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDropdownAction("delete");
+                      }}
                     >
                       <Trash className="mr-2 h-3 w-3 transition-colors group-hover:text-red-600" />
                       <span>Delete</span>
@@ -368,8 +435,8 @@ function CommentCardComponent({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // Memoize the component to prevent unnecessary re-renders
-export const CommentCard = memo(CommentCardComponent)
+export const CommentCard = memo(CommentCardComponent);

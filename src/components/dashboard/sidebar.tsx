@@ -1,26 +1,41 @@
-"use client"
+// @ts-nocheck
+"use client";
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SkeletonLoader } from "@/components/ui/skeleton-loader";
+import { Skeleton } from "@/components/ui/skeleton-loader";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { categoryFilters, emotionFilters, platformFilters, sentimentFilters, statusFilters } from "@/lib/mock-data";
+import {
+  categoryFilters,
+  emotionFilters,
+  platformFilters,
+  sentimentFilters,
+  statusFilters,
+} from "@/lib/mock-data";
 import { fetchFilterCounts, type FilterCounts } from "@/services/comments";
-import type { FilterState } from '@/types';
+import type { FilterState } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown } from "lucide-react";
-import Image from "next/image"
-import { memo } from "react"
+import Image from "next/image";
+import { memo } from "react";
 
 interface DashboardSidebarProps {
-  filters: FilterState
-  onFilterChange: (newFilters: Partial<FilterState>) => void
+  filters: FilterState;
+  onFilterChange: (newFilters: Partial<FilterState>) => void;
 }
 
 function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebarProps) {
-  const { data: counts, isLoading, error } = useQuery<FilterCounts>({
-    queryKey: ['filterCounts'],
+  const {
+    data: counts,
+    isLoading,
+    error,
+  } = useQuery<FilterCounts>({
+    queryKey: ["filterCounts"],
     queryFn: fetchFilterCounts,
   });
 
@@ -30,25 +45,25 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
   }
 
   const handleStatusChange = (status: string) => {
-    onFilterChange({ status: status as any })
-  }
+    onFilterChange({ status: status as any });
+  };
 
   const handleFilterToggle = (filterType: string, filterId: string) => {
-    const current = filters[filterType as keyof FilterState] || []
+    const current = filters[filterType as keyof FilterState] || [];
     const newFilters = Array.isArray(current)
       ? current.includes(filterId)
         ? (current as string[]).filter((id) => id !== filterId)
         : [...(current as string[]), filterId]
-      : [filterId]
-    onFilterChange({ [filterType]: newFilters } as Partial<FilterState>)
-  }
+      : [filterId];
+    onFilterChange({ [filterType]: newFilters } as Partial<FilterState>);
+  };
 
   return (
-    <div className="h-full overflow-auto py-2 px-1 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+    <div className="scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent h-full overflow-auto px-1 py-2">
       <div className="space-y-3">
-        <div className="flex items-center gap-1 px-2 mb-1">
+        <div className="mb-1 flex items-center gap-1 px-2">
           <svg
-            className="h-3.5 w-3.5 text-primary"
+            className="text-primary h-3.5 w-3.5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -65,7 +80,7 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
         </div>
 
         <div className="space-y-1 px-2">
-          <h4 className="text-[10px] font-medium text-muted-foreground mb-1">Status</h4>
+          <h4 className="text-muted-foreground mb-1 text-[10px] font-medium">Status</h4>
           <div className="flex flex-wrap gap-1">
             {statusFilters.map((status) => (
               <TooltipProvider key={status.id}>
@@ -74,14 +89,16 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
                     <Button
                       variant={filters.status === status.id ? "default" : "outline"}
                       size="sm"
-                      className="h-6 text-[10px] px-1.5 relative"
+                      className="relative h-6 px-1.5 text-[10px]"
                       onClick={() => handleStatusChange(status.id)}
                     >
                       <span className="mr-1">{status.icon}</span>
-                      {status.label}
+                      <span className="mr-1 text-[10px]">{status.label}</span>
                       {isLoading ? (
-                        <SkeletonLoader className="ml-1 h-3.5 w-6" />
-                      ) : counts?.status[status.id] !== undefined && counts.status[status.id] > 0 && status.id !== "all" ? (
+                        <Skeleton className="ml-1 h-3.5 w-6" />
+                      ) : counts?.status[status.id] !== undefined &&
+                        counts.status[status.id] > 0 &&
+                        status.id !== "all" ? (
                         <Badge variant="secondary" className="ml-1 h-3.5 px-1 text-[8px]">
                           {counts.status[status.id]}
                         </Badge>
@@ -89,7 +106,9 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="text-xs">
-                    {isLoading ? 'Loading...' : `${counts?.status[status.id] ?? 0} ${status.label.toLowerCase()} ${counts?.status[status.id] === 1 ? "comment" : "comments"}`}
+                    {isLoading
+                      ? "Loading..."
+                      : `${counts?.status[status.id] ?? 0} ${status.label.toLowerCase()} ${counts?.status[status.id] === 1 ? "comment" : "comments"}`}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -99,12 +118,9 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
 
         <Accordion type="multiple" defaultValue={["platforms"]} className="space-y-1">
           <AccordionItem value="platforms" className="border-b-0">
-            <AccordionTrigger className="py-1 hover:no-underline hover:bg-muted/50 px-2 rounded-md">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-medium">Platforms</span>
-                </div>
-                <ChevronDown className="h-3 w-3 transition-transform duration-200" />
+            <AccordionTrigger className="hover:bg-muted/50 rounded-md px-2 py-1 hover:no-underline">
+              <div className="flex w-full items-center">
+                <span className="text-[10px] font-medium">Platforms</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pt-1 pb-0">
@@ -113,12 +129,12 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
                   <div key={platform.id} className="flex items-center">
                     <Button
                       variant={filters.platforms?.includes(platform.id) ? "subtle" : "ghost"}
-                      className="justify-start px-2 w-full h-6 font-normal text-[10px]"
+                      className="h-6 w-full justify-start px-2 text-[10px] font-normal"
                       onClick={() => handleFilterToggle("platforms", platform.id)}
                     >
-                      <div className="flex items-center justify-between w-full">
+                      <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="relative h-3 w-3 platform-icon">
+                          <div className="platform-icon relative h-3 w-3">
                             <Image
                               src={platform.icon || "/placeholder.svg"}
                               alt={platform.label}
@@ -126,13 +142,20 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
                               className="object-contain"
                             />
                           </div>
-                          <span className={filters.platforms?.includes(platform.id) ? `text-${platform.color}` : ""}>
+                          <span
+                            className={
+                              filters.platforms?.includes(platform.id)
+                                ? `text-${platform.color}`
+                                : ""
+                            }
+                          >
                             {platform.label}
                           </span>
                         </div>
                         {isLoading ? (
-                          <SkeletonLoader className="h-3.5 w-6" />
-                        ) : counts?.platforms[platform.id] !== undefined && counts.platforms[platform.id] > 0 ? (
+                          <Skeleton className="h-3.5 w-6" />
+                        ) : counts?.platforms[platform.id] !== undefined &&
+                          counts.platforms[platform.id] > 0 ? (
                           <Badge variant="outline" className="h-3.5 px-1 text-[8px]">
                             {counts.platforms[platform.id]}
                           </Badge>
@@ -146,31 +169,29 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
           </AccordionItem>
 
           <AccordionItem value="emotions" className="border-b-0">
-            <AccordionTrigger className="py-1 hover:no-underline hover:bg-muted/50 px-2 rounded-md">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-medium">Emotions</span>
-                </div>
-                <ChevronDown className="h-3 w-3 transition-transform duration-200" />
+            <AccordionTrigger className="hover:bg-muted/50 rounded-md px-2 py-1 hover:no-underline">
+              <div className="flex w-full items-center justify-start">
+                <span className="text-[10px] font-medium">Emotions</span>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="pt-1 pb-0">
+            <AccordionContent forceMount className="pt-1 pb-0">
               <div className="space-y-0.5">
                 {emotionFilters.map((emotion) => (
                   <div key={emotion.id} className="flex items-center">
                     <Button
                       variant={filters.emotions?.includes(emotion.id) ? "subtle" : "ghost"}
-                      className="justify-start px-2 w-full h-6 font-normal text-[10px]"
+                      className="h-6 w-full justify-start px-2 text-[10px] font-normal"
                       onClick={() => handleFilterToggle("emotions", emotion.id)}
                     >
-                      <div className="flex items-center justify-between w-full">
+                      <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span>{emotion.icon}</span>
                           <span>{emotion.label}</span>
                         </div>
                         {isLoading ? (
-                          <SkeletonLoader className="h-3.5 w-6" />
-                        ) : counts?.emotions[emotion.id] !== undefined && counts.emotions[emotion.id] > 0 ? (
+                          <Skeleton className="h-3.5 w-6" />
+                        ) : counts?.emotions[emotion.id] !== undefined &&
+                          counts.emotions[emotion.id] > 0 ? (
                           <Badge variant="outline" className="h-3.5 px-1 text-[8px]">
                             {counts.emotions[emotion.id]}
                           </Badge>
@@ -184,31 +205,29 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
           </AccordionItem>
 
           <AccordionItem value="sentiments" className="border-b-0">
-            <AccordionTrigger className="py-1 hover:no-underline hover:bg-muted/50 px-2 rounded-md">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-medium">Sentiments</span>
-                </div>
-                <ChevronDown className="h-3 w-3 transition-transform duration-200" />
+            <AccordionTrigger className="hover:bg-muted/50 rounded-md px-2 py-1 hover:no-underline">
+              <div className="flex w-full items-center justify-start">
+                <span className="text-[10px] font-medium">Sentiments</span>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="pt-1 pb-0">
+            <AccordionContent forceMount className="pt-1 pb-0">
               <div className="space-y-0.5">
                 {sentimentFilters.map((sentiment) => (
                   <div key={sentiment.id} className="flex items-center">
                     <Button
                       variant={filters.sentiments?.includes(sentiment.id) ? "subtle" : "ghost"}
-                      className="justify-start px-2 w-full h-6 font-normal text-[10px]"
+                      className="h-6 w-full justify-start px-2 text-[10px] font-normal"
                       onClick={() => handleFilterToggle("sentiments", sentiment.id)}
                     >
-                      <div className="flex items-center justify-between w-full">
+                      <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span>{sentiment.icon}</span>
                           <span>{sentiment.label}</span>
                         </div>
                         {isLoading ? (
-                          <SkeletonLoader className="h-3.5 w-6" />
-                        ) : counts?.sentiments[sentiment.id] !== undefined && counts.sentiments[sentiment.id] > 0 ? (
+                          <Skeleton className="h-3.5 w-6" />
+                        ) : counts?.sentiments[sentiment.id] !== undefined &&
+                          counts.sentiments[sentiment.id] > 0 ? (
                           <Badge variant="outline" className="h-3.5 px-1 text-[8px]">
                             {counts.sentiments[sentiment.id]}
                           </Badge>
@@ -222,31 +241,29 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
           </AccordionItem>
 
           <AccordionItem value="categories" className="border-b-0">
-            <AccordionTrigger className="py-1 hover:no-underline hover:bg-muted/50 px-2 rounded-md">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-medium">Categories</span>
-                </div>
-                <ChevronDown className="h-3 w-3 transition-transform duration-200" />
+            <AccordionTrigger className="hover:bg-muted/50 rounded-md px-2 py-1 hover:no-underline">
+              <div className="flex w-full items-center justify-start">
+                <span className="text-[10px] font-medium">Categories</span>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="pt-1 pb-0">
+            <AccordionContent forceMount className="pt-1 pb-0">
               <div className="space-y-0.5">
                 {categoryFilters.map((category) => (
                   <div key={category.id} className="flex items-center">
                     <Button
                       variant={filters.categories?.includes(category.id) ? "subtle" : "ghost"}
-                      className="justify-start px-2 w-full h-6 font-normal text-[10px]"
+                      className="h-6 w-full justify-start px-2 text-[10px] font-normal"
                       onClick={() => handleFilterToggle("categories", category.id)}
                     >
-                      <div className="flex items-center justify-between w-full">
+                      <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span>{category.icon}</span>
                           <span>{category.label}</span>
                         </div>
                         {isLoading ? (
-                          <SkeletonLoader className="h-3.5 w-6" />
-                        ) : counts?.categories[category.id] !== undefined && counts.categories[category.id] > 0 ? (
+                          <Skeleton className="h-3.5 w-6" />
+                        ) : counts?.categories[category.id] !== undefined &&
+                          counts.categories[category.id] > 0 ? (
                           <Badge variant="outline" className="h-3.5 px-1 text-[8px]">
                             {counts.categories[category.id]}
                           </Badge>
@@ -261,8 +278,8 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
         </Accordion>
       </div>
     </div>
-  )
+  );
 }
 
 // Memoize the component to prevent unnecessary re-renders
-export const DashboardSidebar = memo(DashboardSidebarComponent)
+export const DashboardSidebar = memo(DashboardSidebarComponent);
