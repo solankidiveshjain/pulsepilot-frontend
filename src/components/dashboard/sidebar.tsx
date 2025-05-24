@@ -1,12 +1,15 @@
 "use client"
 
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { categoryFilters, emotionFilters, platformFilters, sentimentFilters, statusFilters } from "@/lib/mock-data"
-import type { FilterState } from '@/types'
-import { ChevronDown } from "lucide-react"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { SkeletonLoader } from "@/components/ui/skeleton-loader";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { categoryFilters, emotionFilters, platformFilters, sentimentFilters, statusFilters } from "@/lib/mock-data";
+import { fetchFilterCounts, type FilterCounts } from "@/services/comments";
+import type { FilterState } from '@/types';
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image"
 import { memo } from "react"
 
@@ -16,6 +19,16 @@ interface DashboardSidebarProps {
 }
 
 function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebarProps) {
+  const { data: counts, isLoading, error } = useQuery<FilterCounts>({
+    queryKey: ['filterCounts'],
+    queryFn: fetchFilterCounts,
+  });
+
+  if (error) {
+    console.error("Failed to fetch filter counts:", error);
+    // Optionally, render an error message or fallback UI
+  }
+
   const handleStatusChange = (status: string) => {
     onFilterChange({ status: status as any })
   }
@@ -66,15 +79,17 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
                     >
                       <span className="mr-1">{status.icon}</span>
                       {status.label}
-                      {status.count > 0 && status.id !== "all" && (
+                      {isLoading ? (
+                        <SkeletonLoader className="ml-1 h-3.5 w-6" />
+                      ) : counts?.status[status.id] !== undefined && counts.status[status.id] > 0 && status.id !== "all" ? (
                         <Badge variant="secondary" className="ml-1 h-3.5 px-1 text-[8px]">
-                          {status.count}
+                          {counts.status[status.id]}
                         </Badge>
-                      )}
+                      ) : null}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="text-xs">
-                    {status.count} {status.label.toLowerCase()} {status.count === 1 ? "comment" : "comments"}
+                    {isLoading ? 'Loading...' : `${counts?.status[status.id] ?? 0} ${status.label.toLowerCase()} ${counts?.status[status.id] === 1 ? "comment" : "comments"}`}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -115,11 +130,13 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
                             {platform.label}
                           </span>
                         </div>
-                        {platform.count > 0 && (
+                        {isLoading ? (
+                          <SkeletonLoader className="h-3.5 w-6" />
+                        ) : counts?.platforms[platform.id] !== undefined && counts.platforms[platform.id] > 0 ? (
                           <Badge variant="outline" className="h-3.5 px-1 text-[8px]">
-                            {platform.count}
+                            {counts.platforms[platform.id]}
                           </Badge>
-                        )}
+                        ) : null}
                       </div>
                     </Button>
                   </div>
@@ -151,11 +168,13 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
                           <span>{emotion.icon}</span>
                           <span>{emotion.label}</span>
                         </div>
-                        {emotion.count > 0 && (
+                        {isLoading ? (
+                          <SkeletonLoader className="h-3.5 w-6" />
+                        ) : counts?.emotions[emotion.id] !== undefined && counts.emotions[emotion.id] > 0 ? (
                           <Badge variant="outline" className="h-3.5 px-1 text-[8px]">
-                            {emotion.count}
+                            {counts.emotions[emotion.id]}
                           </Badge>
-                        )}
+                        ) : null}
                       </div>
                     </Button>
                   </div>
@@ -187,11 +206,13 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
                           <span>{sentiment.icon}</span>
                           <span>{sentiment.label}</span>
                         </div>
-                        {sentiment.count > 0 && (
+                        {isLoading ? (
+                          <SkeletonLoader className="h-3.5 w-6" />
+                        ) : counts?.sentiments[sentiment.id] !== undefined && counts.sentiments[sentiment.id] > 0 ? (
                           <Badge variant="outline" className="h-3.5 px-1 text-[8px]">
-                            {sentiment.count}
+                            {counts.sentiments[sentiment.id]}
                           </Badge>
-                        )}
+                        ) : null}
                       </div>
                     </Button>
                   </div>
@@ -223,11 +244,13 @@ function DashboardSidebarComponent({ filters, onFilterChange }: DashboardSidebar
                           <span>{category.icon}</span>
                           <span>{category.label}</span>
                         </div>
-                        {category.count > 0 && (
+                        {isLoading ? (
+                          <SkeletonLoader className="h-3.5 w-6" />
+                        ) : counts?.categories[category.id] !== undefined && counts.categories[category.id] > 0 ? (
                           <Badge variant="outline" className="h-3.5 px-1 text-[8px]">
-                            {category.count}
+                            {counts.categories[category.id]}
                           </Badge>
-                        )}
+                        ) : null}
                       </div>
                     </Button>
                   </div>

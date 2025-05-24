@@ -480,40 +480,40 @@ export const emotionInfo: Record<string, { icon: string; color: string }> = {
 
 // Filter options
 export const statusFilters = [
-  { id: "all", label: "All", icon: "🔍", count: 13 },
-  { id: "flagged", label: "Flagged", icon: "🚩", count: 3 },
-  { id: "attention", label: "Attention", icon: "⚠️", count: 2 },
-  { id: "archived", label: "Archived", icon: "📦", count: 5 },
+  { id: "all", label: "All", icon: "🔍" },
+  { id: "flagged", label: "Flagged", icon: "🚩" },
+  { id: "attention", label: "Attention", icon: "⚠️" },
+  { id: "archived", label: "Archived", icon: "📦" },
 ]
 
 export const platformFilters = [
-  { id: "youtube", label: "YouTube", color: "youtube", icon: "/youtube.svg", count: 5 },
-  { id: "instagram", label: "Instagram", color: "instagram", icon: "/instagram.svg", count: 3 },
-  { id: "twitter", label: "X", color: "twitter", icon: "/twitter.svg", count: 2 },
-  { id: "tiktok", label: "TikTok", color: "tiktok", icon: "/tiktok.svg", count: 1 },
-  { id: "facebook", label: "Facebook", color: "facebook", icon: "/facebook.svg", count: 2 },
-  { id: "linkedin", label: "LinkedIn", color: "linkedin", icon: "/linkedin.svg", count: 0 },
+  { id: "youtube", label: "YouTube", color: "youtube", icon: "/youtube.svg" },
+  { id: "instagram", label: "Instagram", color: "instagram", icon: "/instagram.svg" },
+  { id: "twitter", label: "X", color: "twitter", icon: "/twitter.svg" },
+  { id: "tiktok", label: "TikTok", color: "tiktok", icon: "/tiktok.svg" },
+  { id: "facebook", label: "Facebook", color: "facebook", icon: "/facebook.svg" },
+  { id: "linkedin", label: "LinkedIn", color: "linkedin", icon: "/linkedin.svg" },
 ]
 
 export const emotionFilters = [
-  { id: "excited", label: "Excited", icon: "🤩", color: "yellow-500", count: 3 },
-  { id: "angry", label: "Angry", icon: "😡", color: "destructive", count: 2 },
-  { id: "curious", label: "Curious", icon: "🤔", color: "blue-500", count: 4 },
-  { id: "happy", label: "Happy", icon: "😊", color: "green-500", count: 3 },
-  { id: "sad", label: "Sad", icon: "😢", color: "blue-500", count: 1 },
+  { id: "excited", label: "Excited", icon: "🤩", color: "yellow-500" },
+  { id: "angry", label: "Angry", icon: "😡", color: "destructive" },
+  { id: "curious", label: "Curious", icon: "🤔", color: "blue-500" },
+  { id: "happy", label: "Happy", icon: "😊", color: "green-500" },
+  { id: "sad", label: "Sad", icon: "😢", color: "blue-500" },
 ]
 
 export const sentimentFilters = [
-  { id: "positive", label: "Positive", icon: "👍", color: "green-500", count: 6 },
-  { id: "negative", label: "Negative", icon: "👎", color: "destructive", count: 3 },
-  { id: "neutral", label: "Neutral", icon: "🤷", color: "gray-500", count: 4 },
+  { id: "positive", label: "Positive", icon: "👍", color: "green-500" },
+  { id: "negative", label: "Negative", icon: "👎", color: "destructive" },
+  { id: "neutral", label: "Neutral", icon: "🤷", color: "gray-500" },
 ]
 
 export const categoryFilters = [
-  { id: "product", label: "Product Feedback", icon: "💬", color: "blue-500", count: 5 },
-  { id: "vip", label: "VIP", icon: "⭐", color: "yellow-500", count: 2 },
-  { id: "spam", label: "Spam", icon: "🚫", color: "red-500", count: 1 },
-  { id: "general", label: "General", icon: "📦", color: "gray-500", count: 5 },
+  { id: "product", label: "Product Feedback", icon: "💬", color: "blue-500" },
+  { id: "vip", label: "VIP", icon: "⭐", color: "yellow-500" },
+  { id: "spam", label: "Spam", icon: "🚫", color: "red-500" },
+  { id: "general", label: "General", icon: "📦", color: "gray-500" },
 ]
 
 // Mock user profile
