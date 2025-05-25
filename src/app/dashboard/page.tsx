@@ -1,7 +1,5 @@
 "use client";
 
-import { CommentsFeed } from "@/components/dashboard/comments-feed";
-import { PostPreview } from "@/components/dashboard/post-preview";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
 import { TopNavigation } from "@/components/dashboard/top-navigation";
 import { Button } from "@/components/ui/button";
@@ -11,7 +9,34 @@ import { useComments } from "@/lib/hooks/comments";
 import { usePosts } from "@/lib/hooks/posts";
 import type { Comment, FilterState, Post } from "@/types";
 import { Filter, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
+
+// Dynamically import CommentsFeed
+const DynamicCommentsFeed = dynamic(
+  () => import("@/components/dashboard/comments-feed").then((mod) => mod.CommentsFeed),
+  {
+    loading: () => (
+      <div className="flex h-full flex-1 items-center justify-center">
+        <p>Loading comments...</p>
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+// Dynamically import PostPreview
+const DynamicPostPreview = dynamic(
+  () => import("@/components/dashboard/post-preview").then((mod) => mod.PostPreview),
+  {
+    loading: () => (
+      <div className="flex h-full items-center justify-center">
+        <p>Loading preview...</p>
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 export default function DashboardPage() {
   const teamId = "mock-team";
@@ -30,7 +55,7 @@ export default function DashboardPage() {
     archived: filters.status === "archived",
     flagged: filters.status === "flagged",
     page: 1,
-    pageSize: 50,
+    pageSize: 50, // Fetching a larger set for client-side filtering example
   });
   const rawComments = commentsData?.items ?? [];
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -41,76 +66,81 @@ export default function DashboardPage() {
 
   // Set preview open when a comment is selected
   useEffect(() => {
-    if (selectedComment) {
+    if (selectedComment && !isMobile) {
+      // Only auto-open preview panel on desktop
       setIsPreviewOpen(true);
     }
-  }, [selectedComment]);
+  }, [selectedComment, isMobile]);
 
   // Close preview panel on mobile when switching to mobile view
   useEffect(() => {
     if (isMobile && isPreviewOpen) {
-      setIsPreviewOpen(false);
+      // This logic is tricky for mobile sheets. Typically, sheets are modal.
+      // If the intent is to close a *sidebar-like* preview, this is okay.
+      // But for a sheet, it's usually user-dismissed.
+      // Let's assume for now it's about ensuring it's closed if it was a desktop-style panel.
+      // setIsPreviewOpen(false); // This might be too aggressive if it's a sheet.
     }
   }, [isMobile, isPreviewOpen]);
 
   const handleCommentSelect = (comment: Comment) => {
     setSelectedComment(comment);
-    // Find the post associated with this comment
     const post = posts.find((p) => p.id === comment.postId);
     if (post) {
       setSelectedPost(post);
     }
-
-    // On mobile, open the preview as a modal/sheet instead of side panel
-    if (isMobile) {
-      setIsPreviewOpen(true);
-    }
+    // For both desktop and mobile, ensure the preview state is explicitly set to open.
+    // The rendering logic will decide whether it's a panel or a sheet.
+    setIsPreviewOpen(true);
   };
 
   const handleClosePostPreview = () => {
     setIsPreviewOpen(false);
+    setSelectedComment(null);
   };
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
-    setFilters({ ...filters, ...newFilters });
+    setFilters((prevFilters) => ({ ...prevFilters, ...newFilters }));
   };
 
-  // Filter comments based on current filters
-  const filteredComments = rawComments.filter((comment) => {
-    // Search filter
-    if (filters.search && !comment.text.toLowerCase().includes(filters.search.toLowerCase())) {
-      return false;
-    }
-
-    // Status filter
-    if (filters.status !== "all") {
-      if (filters.status === "flagged" && !comment.flagged) return false;
-      if (filters.status === "attention" && !comment.needsAttention) return false;
-      if (filters.status === "archived" && !comment.archived) return false;
-    }
-
-    // Platform filter
-    if (filters.platforms.length > 0 && !filters.platforms.includes(comment.platform)) {
-      return false;
-    }
-
-    // Emotion filter
-    if (filters.emotions.length > 0 && !filters.emotions.includes(comment.emotion)) {
-      return false;
-    }
-
-    // Sentiment filter
-    if (filters.sentiments.length > 0 && !filters.sentiments.includes(comment.sentiment)) {
-      return false;
-    }
-
-    // Category filter
-    if (filters.categories.length > 0 && !filters.categories.includes(comment.category)) {
-      return false;
-    }
-
-    return true;
-  });
+  // Client-side filtering:
+  // This remains here as an example, but in a real-world scenario with pagination/virtualization,
+  // filtering would ideally be done server-side or debounced heavily if client-side on large datasets.
+  // The `CommentsFeed` component itself now handles its own display of these comments.
+  const filteredComments = useMemo(() => {
+    return rawComments.filter((comment) => {
+      if (
+        filters.search &&
+        !comment.text.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !(
+          comment.author.name &&
+          comment.author.name.toLowerCase().includes(filters.search.toLowerCase())
+        )
+      ) {
+        return false;
+      }
+      if (filters.status !== "all") {
+        if (filters.status === "flagged" && !comment.flagged) return false;
+        if (filters.status === "attention" && !comment.needsAttention) return false;
+        if (filters.status === "archived" && !comment.archived) return false;
+        // Assuming "unread" might be a status. If not, this needs adjustment.
+        // For now, "unread" is handled by sorting in CommentsFeed.
+      }
+      if (filters.platforms.length > 0 && !filters.platforms.includes(comment.platform)) {
+        return false;
+      }
+      if (filters.emotions.length > 0 && !filters.emotions.includes(comment.emotion)) {
+        return false;
+      }
+      if (filters.sentiments.length > 0 && !filters.sentiments.includes(comment.sentiment)) {
+        return false;
+      }
+      if (filters.categories.length > 0 && !filters.categories.includes(comment.category)) {
+        return false;
+      }
+      return true;
+    });
+  }, [rawComments, filters]);
 
   return (
     <>
@@ -119,7 +149,9 @@ export default function DashboardPage() {
         <div className="mx-auto flex h-full max-w-[theme(screens.2xl)]">
           {/* Filters Sidebar - Desktop */}
           {!isMobile && (
-            <div className="border-border/30 w-64 overflow-hidden border-r">
+            <div className="border-border/30 w-64 flex-shrink-0 overflow-y-auto border-r">
+              {" "}
+              {/* Added flex-shrink-0 and overflow-y-auto */}
               <DashboardSidebar filters={filters} onFilterChange={handleFilterChange} />
             </div>
           )}
@@ -138,8 +170,7 @@ export default function DashboardPage() {
                   filters={filters}
                   onFilterChange={(newFilters) => {
                     handleFilterChange(newFilters);
-                    // Optionally close sidebar on filter change on mobile
-                    // setIsSidebarOpen(false);
+                    setIsSidebarOpen(false); // Close sidebar on filter change on mobile
                   }}
                 />
               </SheetContent>
@@ -147,10 +178,9 @@ export default function DashboardPage() {
           )}
 
           {/* Main Comment Feed - Responsive width */}
-          <div
-            className={`border-border/30 flex-1 overflow-hidden border-r ${isPreviewOpen && !isMobile ? "w-[60%]" : "w-full"}`}
-          >
-            <CommentsFeed
+          {/* Use flex-1 on the parent and ensure CommentsFeed can take up that space */}
+          <div className={`border-border/30 flex flex-1 flex-col overflow-hidden border-r`}>
+            <DynamicCommentsFeed
               comments={filteredComments}
               selectedComment={selectedComment}
               onCommentSelect={handleCommentSelect}
@@ -161,8 +191,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Post Preview Panel - Desktop */}
-          {!isMobile && isPreviewOpen && (
-            <div className="relative w-[40%]">
+          {!isMobile && isPreviewOpen && selectedPost && (
+            <div className="border-border/30 relative w-[24rem] flex-shrink-0 overflow-y-auto border-l">
+              {" "}
+              {/* Added flex-shrink-0 and overflow-y-auto */}
               <Button
                 variant="ghost"
                 size="sm"
@@ -172,15 +204,23 @@ export default function DashboardPage() {
                 <X className="h-3.5 w-3.5" />
                 <span className="sr-only">Close preview</span>
               </Button>
-              <PostPreview post={selectedPost} />
+              <DynamicPostPreview post={selectedPost} />
             </div>
           )}
 
           {/* Post Preview Panel - Mobile (as a Sheet) */}
-          {isMobile && (
-            <Sheet open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-              <SheetContent side="right" className="w-[90%] p-0 pt-8">
-                <PostPreview post={selectedPost} />
+          {isMobile && selectedPost && (
+            <Sheet
+              open={isPreviewOpen}
+              onOpenChange={(open) => {
+                setIsPreviewOpen(open);
+                if (!open) setSelectedComment(null);
+              }}
+            >
+              <SheetContent side="right" className="w-[90%] p-0 pt-8 sm:max-w-lg">
+                {" "}
+                {/* Added sm:max-w-lg for better responsiveness */}
+                <DynamicPostPreview post={selectedPost} />
               </SheetContent>
             </Sheet>
           )}
